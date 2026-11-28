@@ -19,7 +19,7 @@ XMSS_Verification_Operation::XMSS_Verification_Operation(const XMSS_PublicKey& p
       m_pub_key(public_key), m_hash(public_key.xmss_parameters()), m_msg_buf(0) {}
 
 bool XMSS_Verification_Operation::verify(const XMSS_Signature& sig,
-                                         const secure_vector<uint8_t>& msg,
+                                         std::span<const uint8_t> msg,
                                          const XMSS_PublicKey& public_key) {
    const auto& params = m_pub_key.xmss_parameters();
 
@@ -52,13 +52,16 @@ void XMSS_Verification_Operation::update(std::span<const uint8_t> input) {
 }
 
 bool XMSS_Verification_Operation::is_valid_signature(std::span<const uint8_t> sig) {
+   const bool result = is_valid_signature_of(m_msg_buf, sig);
+   m_msg_buf.clear();
+   return result;
+}
+
+bool XMSS_Verification_Operation::is_valid_signature_of(std::span<const uint8_t> msg, std::span<const uint8_t> sig) {
    try {
       const XMSS_Signature signature(m_pub_key.xmss_parameters().oid(), sig);
-      const bool result = verify(signature, m_msg_buf, m_pub_key);
-      m_msg_buf.clear();
-      return result;
+      return verify(signature, msg, m_pub_key);
    } catch(...) {
-      m_msg_buf.clear();
       return false;
    }
 }

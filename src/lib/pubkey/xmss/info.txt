@@ -29,5 +29,6 @@ rng
 hash
 hash_engine
 stateful_key_index
+tree_hash
 trunc_hash
 </requires>

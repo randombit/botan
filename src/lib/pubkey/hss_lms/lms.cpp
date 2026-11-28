@@ -16,6 +16,7 @@
 #include <botan/internal/hash_engine.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tree_hash.h>
+#include <memory>
 
 namespace Botan {
 namespace {
@@ -85,16 +86,17 @@ void lms_gen_leaf(StrongSpan<LMS_Tree_Node> out,
    hash.final(out);
 }
 
-auto lms_gen_leaves_func(const LMS_PrivateKey& lms_sk) {
+Merkle_Leaf_Fn lms_gen_leaves_func(const LMS_PrivateKey& lms_sk) {
    // The hash engine is created once here and reused for all leaves
-   return [engine = Hash_Engine::create_or_throw(lms_sk.lmots_params().hash_name()), lms_sk](
-             std::span<uint8_t> out, LMS_Tree_Node_Idx first_idx, size_t count) {
+   return [engine = std::shared_ptr<Hash_Engine>(Hash_Engine::create_or_throw(lms_sk.lmots_params().hash_name())),
+           lms_sk](std::span<uint8_t> out, uint32_t first_idx, uint32_t count) {
       const size_t m = lms_sk.lms_params().m();
       const auto& identifier = lms_sk.identifier();
 
       // The OTS public key hashes of all requested leaves
       std::vector<uint8_t> ks(count * m);
-      lmots_compute_pubkeys(ks, lms_sk.lmots_params(), identifier, first_idx, count, lms_sk.seed(), *engine);
+      lmots_compute_pubkeys(
+         ks, lms_sk.lmots_params(), identifier, LMS_Tree_Node_Idx(first_idx), count, lms_sk.seed(), *engine);
 
       // Leaf node hash: H(I || u32str(r) || u16str(D_LEAF) || K)
       const size_t prefix_len = identifier.size() + sizeof(uint32_t) + sizeof(uint16_t);
@@ -103,7 +105,7 @@ auto lms_gen_leaves_func(const LMS_PrivateKey& lms_sk) {
       std::vector<std::span<const uint8_t>> prefix_spans(count);
       std::vector<std::span<const uint8_t>> k_spans(count);
       for(size_t i = 0; i != count; ++i) {
-         const uint32_t r = (uint32_t(1) << lms_sk.lms_params().h()) + first_idx.get() + static_cast<uint32_t>(i);
+         const uint32_t r = (uint32_t(1) << lms_sk.lms_params().h()) + first_idx + static_cast<uint32_t>(i);
          const auto prefix_span = std::span(prefixes).subspan(i * prefix_len, prefix_len);
          BufferStuffer prefix(prefix_span);
          prefix.append(identifier);
@@ -117,26 +119,52 @@ auto lms_gen_leaves_func(const LMS_PrivateKey& lms_sk) {
    };
 }
 
-void lms_treehash(StrongSpan<LMS_Tree_Node> out_root,
-                  std::optional<StrongSpan<LMS_AuthenticationPath>> out_auth_path,
-                  std::optional<LMS_Tree_Node_Idx> leaf_idx,
-                  const LMS_PrivateKey& lms_sk) {
-   auto hash_pair_func = get_hash_pair_func_for_identifier(lms_sk.lms_params(), lms_sk.identifier());
-   auto gen_leaves = lms_gen_leaves_func(lms_sk);
-   TreeAddress lms_tree_address(lms_sk.lms_params().h());
+/**
+ * Interior node hash: H(I || u32str(r) || u16str(D_INTR) || left || right)
+ *
+ * The node at height j with index t has node number r = 2^(h-j) + t
+ */
+Merkle_Node_Fn lms_node_func(const LMS_Params& lms_params, const LMS_Identifier& identifier) {
+   return
+      [engine = std::shared_ptr<Hash_Engine>(Hash_Engine::create_or_throw(lms_params.hash_name(), identifier.get())),
+       h = lms_params.h(),
+       m = lms_params.m()](
+         std::span<uint8_t> out, uint32_t j, uint32_t first_t, uint32_t count, std::span<const uint8_t> children) {
+         constexpr size_t prefix_len = sizeof(uint32_t) + sizeof(uint16_t);
+         std::vector<uint8_t> prefixes(count * prefix_len);
+         std::vector<std::span<uint8_t>> outs(count);
+         std::vector<std::span<const uint8_t>> prefix_spans(count);
+         std::vector<std::span<const uint8_t>> child_spans(count);
+         for(size_t i = 0; i != count; ++i) {
+            const uint32_t r = (uint32_t(1) << (h - j)) + first_t + static_cast<uint32_t>(i);
+            const auto prefix_span = std::span(prefixes).subspan(i * prefix_len, prefix_len);
+            BufferStuffer prefix(prefix_span);
+            prefix.append(store_be(r));
+            prefix.append(store_be(D_INTR));
+            prefix_spans[i] = prefix_span;
+            outs[i] = out.subspan(i * m, m);
+            child_spans[i] = children.subspan(2 * i * m, 2 * m);
+         }
+         engine->batch_hash(outs, prefix_spans, child_spans);
+      };
+}
 
-   treehash(out_root,
-            out_auth_path,
-            leaf_idx,
-            lms_sk.lms_params().m(),
-            LMS_TreeLayerIndex(lms_sk.lms_params().h()),
-            0,
-            std::move(hash_pair_func),
-            std::move(gen_leaves),
-            lms_tree_address);
+Merkle_Tree_Builder lms_merkle_tree(const LMS_PrivateKey& sk) {
+   constexpr uint32_t leaf_batch = 32;
+   return Merkle_Tree_Builder(sk.lms_params().h(),
+                              sk.lms_params().m(),
+                              leaf_batch,
+                              lms_gen_leaves_func(sk),
+                              lms_node_func(sk.lms_params(), sk.identifier()));
 }
 
 }  // namespace
+
+Merkle_Treetop lms_treetop_from_row(const LMS_Params& lms_params,
+                                    const LMS_Identifier& identifier,
+                                    std::span<const uint8_t> row) {
+   return Merkle_Treetop::from_row(lms_params.h(), lms_params.m(), row, lms_node_func(lms_params, identifier));
+}
 
 std::unique_ptr<HashFunction> LMS_Params::hash() const {
    return HashFunction::create_or_throw(hash_name());
@@ -274,24 +302,40 @@ LMS_Params::LMS_Params(LMS_Algorithm_Type algorithm_type, std::string_view hash_
 LMS_PublicKey LMS_PrivateKey::sign_and_get_pk(StrongSpan<LMS_Signature_Bytes> out_sig,
                                               LMS_Tree_Node_Idx q,
                                               const LMS_Message& msg) const {
-   // Pre-alloc space for the signature
+   const auto [treetop, subtree] = build_tree(q);
+   sign_with_nodes(out_sig, q, msg, treetop, &subtree);
+   const auto root = treetop.root();
+   return LMS_PublicKey(lms_params(), lmots_params(), identifier(), LMS_Tree_Node(root.begin(), root.end()));
+}
+
+std::pair<Merkle_Treetop, Merkle_Subtree> LMS_PrivateKey::build_tree(LMS_Tree_Node_Idx q) const {
+   BOTAN_ARG_CHECK(q.get() < (uint32_t(1) << lms_params().h()), "Invalid LMS leaf index");
+   return lms_merkle_tree(*this).build(q.get());
+}
+
+std::optional<Merkle_Subtree> LMS_PrivateKey::build_subtree(const Merkle_Treetop& treetop, LMS_Tree_Node_Idx q) const {
+   BOTAN_ARG_CHECK(q.get() < (uint32_t(1) << lms_params().h()), "Invalid LMS leaf index");
+   return lms_merkle_tree(*this).build_subtree(treetop, q.get());
+}
+
+void LMS_PrivateKey::sign_with_nodes(StrongSpan<LMS_Signature_Bytes> out_sig,
+                                     LMS_Tree_Node_Idx q,
+                                     const LMS_Message& msg,
+                                     const Merkle_Treetop& treetop,
+                                     const Merkle_Subtree* subtree) const {
+   const uint32_t h = lms_params().h();
    BOTAN_ARG_CHECK(out_sig.size() == LMS_Signature::size(lms_params(), lmots_params()), "Invalid output buffer size");
+   BOTAN_ARG_CHECK(q.get() < (uint32_t(1) << h), "Invalid LMS leaf index");
+   BOTAN_ARG_CHECK(treetop.h() == h && treetop.n() == lms_params().m(), "Treetop does not belong to this tree");
 
    BufferStuffer sig_stuffer(out_sig);
    sig_stuffer.append(store_be(q));
    const LMOTS_Private_Key lmots_sk(lmots_params(), identifier(), q, seed());
    lmots_sk.sign(sig_stuffer.next<LMOTS_Signature_Bytes>(LMOTS_Signature::size(lmots_params())), msg);
    sig_stuffer.append(store_be(lms_params().algorithm_type()));
-   const auto auth_path_buffer = sig_stuffer.next<LMS_AuthenticationPath>(lms_params().m() * lms_params().h());
+   treetop.auth_path(sig_stuffer.next(h * lms_params().m()), q.get(), subtree);
 
    BOTAN_ASSERT_NOMSG(sig_stuffer.full());
-
-   const TreeAddress lms_tree_address(lms_params().h());
-   LMS_Tree_Node pk_buffer(lms_params().m());
-   lms_treehash(StrongSpan<LMS_Tree_Node>(pk_buffer.get()), auth_path_buffer, q, *this);
-
-   CT::unpoison(pk_buffer);
-   return LMS_PublicKey(lms_params(), lmots_params(), identifier(), std::move(pk_buffer));
 }
 
 LMS_PublicKey LMS_PublicKey::from_bytes_or_throw(BufferSlicer& slicer) {
@@ -380,7 +424,7 @@ LMS_Signature LMS_Signature::from_bytes_or_throw(BufferSlicer& slicer) {
 
 LMS_PublicKey::LMS_PublicKey(const LMS_PrivateKey& sk) :
       /* NOLINT(*-slicing) */ LMS_Instance(sk), m_lms_root(sk.lms_params().m()) {
-   lms_treehash(StrongSpan<LMS_Tree_Node>(m_lms_root), std::nullopt, std::nullopt, sk);
+   copy_mem(m_lms_root, lms_merkle_tree(sk).root());
 }
 
 bool LMS_PublicKey::verify_signature(const LMS_Message& msg, const LMS_Signature& sig) const {

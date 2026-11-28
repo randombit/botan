@@ -90,6 +90,18 @@ class PerfTest_PKSig : public PerfTest {
 
             while(ver_timer->under(msec) || sig_timer->under(msec)) {
                if(signature.empty() || sig_timer->under(msec)) {
+                  if(sk->remaining_operations().value_or(1) == 0) {
+                     // A stateful key ran out of signatures; continue with a new one
+                     sig.reset();
+                     ver.reset();
+                     sk = Botan::create_private_key(alg, rng, param);
+                     pk = sk->public_key();
+                     if(!one_shot) {
+                        sig.emplace(make_signer());
+                        ver.emplace(make_verifier());
+                     }
+                  }
+
                   /*
                   Length here is kind of arbitrary, but 48 bytes fits into a single
                   hash block so minimizes hashing overhead versus the PK op itself.

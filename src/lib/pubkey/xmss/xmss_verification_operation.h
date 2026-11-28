@@ -25,6 +25,12 @@ class XMSS_Verification_Operation final : public virtual PK_Ops::Verification {
 
       bool is_valid_signature(std::span<const uint8_t> sign) override;
 
+      /**
+       * Verify a serialized signature of a message which the caller already
+       * holds, without buffering it. Any input given to update() is ignored.
+       */
+      bool is_valid_signature_of(std::span<const uint8_t> msg, std::span<const uint8_t> sign);
+
       void update(std::span<const uint8_t> input) override;
 
       std::string hash_function() const override { return m_hash.hash_function(); }
@@ -40,7 +46,7 @@ class XMSS_Verification_Operation final : public virtual PK_Ops::Verification {
        *
        * @return true if signature sig is valid for msg, false otherwise.
        **/
-      bool verify(const XMSS_Signature& sig, const secure_vector<uint8_t>& msg, const XMSS_PublicKey& pub_key);
+      bool verify(const XMSS_Signature& sig, std::span<const uint8_t> msg, const XMSS_PublicKey& pub_key);
 
       const XMSS_PublicKey m_pub_key;
       XMSS_Hash m_hash;

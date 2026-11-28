@@ -2472,6 +2472,13 @@ width defined by the corresponding parameter set. Choosing `XMSS-SHA2_10_256`
 for instance will use the SHA2-256 hash function to generate a tree of height
 ten.
 
+Besides the secret, the private key encoding holds 1024 nodes from the upper
+part of the tree, which avoids recomputing the tree when signing, at the cost of
+between 24 and 64 KiB of encoding. Keys in the older encoding, which lacks this data, are
+still accepted, but keys are always written in the new encoding. It uses a
+different PKCS #8 algorithm identifier, which older versions of Botan do not
+recognize.
+
 .. _xmss_example:
 
 Code Example: XMSS
@@ -2523,3 +2530,12 @@ and `draft-fluhrer-lms-more-parm-sets-11 <https://datatracker.ietf.org/doc/html/
 - hash: ``SHA-256``, ``Truncated(SHA-256,192)``, ``SHAKE-256(256)``, ``SHAKE-256(192)``
 - h: ``5``, ``10``, ``15``, ``20``, ``25``
 - w: ``1``, ``2``, ``4``, ``8``
+
+Besides the secret, the private key encoding holds public data about the LMS
+trees currently in use: the root of the top tree, the upper nodes of each tree,
+and the signatures which link each tree to its parent. This avoids recomputing
+the trees when a key is loaded or used for signing, at the cost of up to about
+40 KiB of encoding per level. Keys in the older encoding, which lacks this data,
+are still accepted, but keys are always written in the new encoding. It uses a
+different PKCS #8 algorithm identifier, which older versions of Botan do not
+recognize.

@@ -5,6 +5,7 @@ type -> "Internal"
 </module_info>
 
 <header:internal>
+merkle_tree.h
 tree_hash.h
 </header:internal>
 

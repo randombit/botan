@@ -817,7 +817,7 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("hash", ["--no-fsname", msg], "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855")
 
     test_cli("keygen", ["--algo=XMSS", "--params=XMSS-SHA2_10_256", "--output=%s" % (priv_key)], "")
-    test_cli("hash", ["--no-fsname", priv_key], "737368AB8BFC6B0CDA0DF7FB6BD1DE48C2ABA81236F65E4E227920CECCC5F259")
+    test_cli("hash", ["--no-fsname", priv_key], "3DECE85CB919075130C81B299B5C9AC3B1F89E0F583E53A052DB3B93E33067F5")
 
     # If the updated key cannot be stored, no signature may be produced and
     # the key file must be left unchanged
@@ -830,7 +830,7 @@ def cli_xmss_sign_tests(tmp_dir):
         try:
             test_cli("sign", [ro_key, msg], "",
                      expected_stderr="Error: Error opening %s.tmp" % (ro_key), expected_rc=2)
-            test_cli("hash", ["--no-fsname", ro_key], "737368AB8BFC6B0CDA0DF7FB6BD1DE48C2ABA81236F65E4E227920CECCC5F259")
+            test_cli("hash", ["--no-fsname", ro_key], "3DECE85CB919075130C81B299B5C9AC3B1F89E0F583E53A052DB3B93E33067F5")
         finally:
             os.chmod(ro_dir, 0o700)
 
@@ -842,7 +842,7 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("sign", [priv_key, msg, "--output=%s" % (sig1)], "")
     test_cli("verify", [pub_key, msg, sig1], "Signature is valid")
     test_cli("hash", ["--no-fsname", sig1], "A37241040C0C7044DD502D92B69E8B931FF43FBC91CF4E3C869B23206EBFABF6")
-    test_cli("hash", ["--no-fsname", priv_key], "748E63766E8805A4CED94B7BC52F0A5EB2D6F8CECFD2CFC27C61DFA2C7DC1328")
+    test_cli("hash", ["--no-fsname", priv_key], "4CC07163F49C6D00853F7EB85A8B47DB978FD0ADCF7DD6475E55637011061C97")
     check_private_file(priv_key)
     if os.path.exists(priv_key + ".tmp"):
         logging.error("Temporary key file was left behind")
@@ -850,7 +850,7 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("sign", [priv_key, msg, "--output=%s" % (sig2)], "")
     test_cli("verify", [pub_key, msg, sig2], "Signature is valid")
     test_cli("hash", ["--no-fsname", sig2], "D593C1D0ADED11422248AE16CA77828CD2161CA3FCE3D0118A78D188C637D883")
-    test_cli("hash", ["--no-fsname", priv_key], "745903AC3BB7F55A6003BB59B13FC3BB48F4ACCAC7FE5888DD38031C55785B70")
+    test_cli("hash", ["--no-fsname", priv_key], "80FA8E0CC43FD9764E3C5C41636C7102D77C7F477FEC212F572074D9CB05FF13")
 
     # private key updates, public key is unchanged:
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key2, priv_key), "")
@@ -860,15 +860,15 @@ def cli_xmss_sign_tests(tmp_dir):
     # verify that key is updated when creating a self-signed certificate
     test_cli("gen_self_signed",
              [priv_key, "Root", "--ca", "--path-limit=2", "--output="+root_crt], "")
-    test_cli("hash", ["--no-fsname", priv_key], "364744707707A05F9348848EF473CCCE600D337E9715EB5D899EE392E1B49FD7")
+    test_cli("hash", ["--no-fsname", priv_key], "35638708A46A2D1965311ADEFA5D23230B3867D635669668CC0707ADA5FC8B4F")
 
     # verify that key is updated after signing a certificate request
     test_cli("gen_pkcs10", "%s Intermediate --ca --output=%s" % (priv_key, int_csr))
-    test_cli("hash", ["--no-fsname", priv_key], "C460DC6B4BAC18360C61F93F8E33762AECEDBC864E0D9EA7A2561A8B8CC04A89")
+    test_cli("hash", ["--no-fsname", priv_key], "0B1C863EBEB2E3AD2B8940F42AB7C84892FE3968941C692B6A5D4CA3A421E0B6")
 
     # verify that key is updated after issuing a certificate
     test_cli("sign_cert", "%s %s %s --output=%s" % (root_crt, priv_key, int_csr, int_crt))
-    test_cli("hash", ["--no-fsname", priv_key], "DDFC14EADFC7EDCC569D038F6BCBBC359D035B1CBB7BB0814E134AA5BB8FB8C8")
+    test_cli("hash", ["--no-fsname", priv_key], "653F11616660F0C1268E3CC2926E5B7197E721F654D225BE489F32099E1DE0E5")
 
     test_cli("cert_verify", "%s %s" % (int_crt, root_crt), "Certificate passes validation checks")
 

@@ -134,6 +134,24 @@ std::unique_ptr<Private_Key> HSS_LMS_PublicKey::generate_another(RandomNumberGen
 HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(std::span<const uint8_t> private_key) :
       HSS_LMS_PrivateKey(AlgorithmIdentifier(), private_key) {}
 
+namespace {
+
+HSS_LMS_PrivateKey_Format private_key_format(const OID& oid) {
+   // TODO(Botan4) Remove the legacy format, and accept only the current one
+   if(oid.empty()) {
+      // Raw bytes, such as from raw_private_key_bits() of this or an older version
+      return HSS_LMS_PrivateKey_Format::Either;
+   } else if(oid == OID::from_string("HSS-LMS-Private-Key-legacy")) {
+      return HSS_LMS_PrivateKey_Format::Legacy;
+   } else if(oid == OID::from_string("HSS-LMS-Private-Key")) {
+      return HSS_LMS_PrivateKey_Format::Current;
+   } else {
+      throw Decoding_Error("Unexpected OID for HSS-LMS private key");
+   }
+}
+
+}  // namespace
+
 HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
    // The HSS/LMS parameters are carried in the key bits; no AlgorithmIdentifier
    // parameters are defined.
@@ -141,7 +159,7 @@ HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(const AlgorithmIdentifier& alg_id, std::s
       throw Decoding_Error("Unexpected parameters for HSS-LMS private key");
    }
 
-   m_private = HSS_LMS_PrivateKeyInternal::from_bytes_or_throw(key_bits);
+   m_private = HSS_LMS_PrivateKeyInternal::from_bytes_or_throw(key_bits, private_key_format(alg_id.oid()));
    const auto scope = CT::scoped_poison(*m_private);
    m_public = std::make_shared<HSS_LMS_PublicKeyInternal>(HSS_LMS_PublicKeyInternal::create(*m_private));
    CT::unpoison(*m_public);
@@ -178,9 +196,13 @@ std::unique_ptr<Public_Key> HSS_LMS_PrivateKey::public_key() const {
 
 // We use a separate algorithm identifier for the private key since we use a Botan scoped OID for it.
 // This is necessary since the private key format is implementation specific, since it is not defined
-// in RFC 8554.
+// in RFC 8554. Each revision of the format gets its own OID.
 AlgorithmIdentifier HSS_LMS_PrivateKey::pkcs8_algorithm_identifier() const {
    return AlgorithmIdentifier(OID::from_string("HSS-LMS-Private-Key"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+}
+
+bool HSS_LMS_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool strong) const {
+   return !strong || m_private->root_matches_seed();
 }
 
 std::optional<uint64_t> HSS_LMS_PrivateKey::remaining_operations() const {

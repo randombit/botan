@@ -13,7 +13,6 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/xmss_common_ops.h>
 #include <botan/internal/xmss_hash.h>
-#include <algorithm>
 
 namespace Botan {
 
@@ -23,60 +22,37 @@ namespace {
 * Number of leaves whose WOTS+ keys and L-trees are computed at once,
 * so that the hash calls of each step are batched across all of them
 */
-constexpr size_t LEAF_BATCH = 128;
+constexpr uint32_t LEAF_BATCH = 128;
 
 }  // namespace
 
-secure_vector<uint8_t> XMSS_Tree_Builder::tree_hash(size_t start_idx,
-                                                    size_t target_node_height,
-                                                    const XMSS_Address& adrs_in,
-                                                    XMSS_Hash& hash) const {
-   BOTAN_ASSERT_NOMSG(target_node_height <= 30);
-   BOTAN_ASSERT((start_idx % (static_cast<size_t>(1) << target_node_height)) == 0,
-                "Start index must be divisible by 2^{target node height}.");
+Merkle_Tree_Builder XMSS_Tree_Builder::merkle_tree(size_t height, const XMSS_Address& adrs, XMSS_Hash& hash) const {
+   BOTAN_ASSERT_NOMSG(height <= 30);
 
    const size_t n = m_wots_params.element_size();
-   const secure_vector<uint8_t>& seed = this->public_seed();
-   const size_t last_idx = (static_cast<size_t>(1) << target_node_height) + start_idx;
 
-   const size_t batch = std::min<size_t>(LEAF_BATCH, last_idx - start_idx);
-   secure_vector<uint8_t> leaves(batch * n);
+   auto leaf_fn = [builder = *this, adrs, &hash](std::span<uint8_t> out, uint32_t first_leaf, uint32_t count) {
+      builder.compute_leaves(out, first_leaf, count, adrs, hash);
+   };
 
-   // node stack, holds all nodes on stack and one extra "pending" node. This
-   // temporary node referred to as "node" in the XMSS standard document stays
-   // a pending element, meaning it is not regarded as element on the stack
-   // until level is increased.
-   std::vector<secure_vector<uint8_t>> nodes(target_node_height + 1, secure_vector<uint8_t>(n));
-   std::vector<uint8_t> node_levels(target_node_height + 1);
+   // Algorithm 9: "treeHash", which addresses a node by the height of its
+   // children and its own index
+   auto node_fn =
+      [builder = *this, adrs, &hash, n](
+         std::span<uint8_t> out, uint32_t j, uint32_t first_t, uint32_t count, std::span<const uint8_t> children) {
+         XMSS_Address node_adrs(adrs);
+         node_adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
+         node_adrs.set_tree_height(j - 1);
 
-   uint8_t level = 0;  // current level on the node stack.
+         std::vector<XMSS_Address> node_addrs(count, node_adrs);
+         for(uint32_t i = 0; i != count; ++i) {
+            node_addrs[i].set_tree_index(first_t + i);
+         }
 
-   XMSS_Address adrs(adrs_in);
-   adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
+         XMSS_Common_Ops::randomize_tree_hashes(out, children, node_addrs, builder.public_seed(), hash, n);
+      };
 
-   for(size_t i = start_idx; i < last_idx; i++) {
-      const size_t b = (i - start_idx) % batch;
-      if(b == 0) {
-         const size_t count = std::min(batch, last_idx - i);
-         compute_leaves(std::span(leaves).first(count * n), i, count, adrs, hash);
-      }
-
-      copy_mem(nodes[level], std::span(leaves).subspan(b * n, n));
-      node_levels[level] = 0;
-
-      adrs.set_tree_height(0);
-      adrs.set_tree_index(static_cast<uint32_t>(i));
-
-      while(level > 0 && node_levels[level] == node_levels[level - 1]) {
-         adrs.set_tree_index(((adrs.get_tree_index() - 1) >> 1));
-         XMSS_Common_Ops::randomize_tree_hash(nodes[level - 1], nodes[level - 1], nodes[level], adrs, seed, hash, n);
-         node_levels[level - 1]++;
-         level--;  //Pop stack top element
-         adrs.set_tree_height(adrs.get_tree_height() + 1);
-      }
-      level++;  //push temporary node to stack
-   }
-   return nodes[level - 1];
+   return Merkle_Tree_Builder(static_cast<uint32_t>(height), n, LEAF_BATCH, std::move(leaf_fn), std::move(node_fn));
 }
 
 void XMSS_Tree_Builder::compute_leaves(
@@ -122,7 +98,7 @@ void XMSS_Tree_Builder::wots_private_keys(std::span<uint8_t> sks,
    const size_t len = m_wots_params.len();
    const size_t count = addrs.size();
 
-   BOTAN_ASSERT_NOMSG(sks.size() == count * n && count % len == 0);
+   BOTAN_ASSERT_NOMSG(len > 0 && sks.size() == count * n && count % len == 0);
 
    switch(m_wots_derivation_method) {
       case WOTS_Derivation_Method::NIST_SP800_208: {

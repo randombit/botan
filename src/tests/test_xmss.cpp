@@ -13,14 +13,25 @@
    #include "test_pubkey.h"
    #include "test_rng.h"
    #include <botan/asn1_obj.h>
+   #include <botan/der_enc.h>
    #include <botan/hash.h>
    #include <botan/hex.h>
    #include <botan/pk_options.h>
+   #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
    #include <botan/xmss.h>
    #include <botan/internal/buffer_slicer.h>
+   #include <botan/internal/concat_util.h>
+   #include <botan/internal/fmt.h>
    #include <botan/internal/loadstor.h>
+   #include <botan/internal/merkle_tree.h>
    #include <botan/internal/target_info.h>
+   #include <array>
+   #include <set>
+
+   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
+      #include <future>
+   #endif
 
    #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
       #include <sys/wait.h>
@@ -146,7 +157,10 @@ class XMSS_Keygen_Reference_Test final : public Text_Based_Test {
          const auto xmss_algo = Botan::XMSS_Parameters::xmss_id_from_string(vars.get_req_str("Params"));
          const Botan::XMSS_PrivateKey keypair(xmss_algo, fixed_rng);
 
-         result.test_bin_eq("Generated private key matches", keypair.raw_private_key(), vars.get_req_bin("PrivateKey"));
+         // The encoding continues with the tree data cached by Botan
+         const auto expected_sk = vars.get_req_bin("PrivateKey");
+         const auto sk = keypair.raw_private_key();
+         result.test_bin_eq("Generated private key matches", std::span(sk).first(expected_sk.size()), expected_sk);
          result.test_bin_eq("Generated public key matches", keypair.raw_public_key(), vars.get_req_bin("PublicKey"));
 
          return result;
@@ -431,13 +445,14 @@ std::vector<Test::Result> xmss_wots_derivation_method() {
       const Botan::XMSS_PrivateKey sk(oid, 0, private_seed, prf, root, public_seed);
       auto skbytes = sk.raw_private_key();
 
-      // The derivation method is the final byte of the encoding
-      skbytes.back() = 0;
+      // The derivation method is the final byte of the legacy fields
+      auto& method = skbytes.at(Botan::XMSS_Parameters::from_id(oid)._raw_private_key_size() - 1);
+      method = 0;
       result.test_throws<Botan::Decoding_Error>("decoding rejects method 0", [&] {
          const Botan::XMSS_PrivateKey loaded(Botan::AlgorithmIdentifier(), skbytes);
       });
 
-      skbytes.back() = 3;
+      method = 3;
       result.test_throws<Botan::Decoding_Error>("decoding rejects method 3", [&] {
          const Botan::XMSS_PrivateKey loaded(Botan::AlgorithmIdentifier(), skbytes);
       });
@@ -639,6 +654,468 @@ std::vector<Test::Result> xmss_fork_safety() {
    #endif
 }
 
+uint32_t u32_at(std::span<const uint8_t> bytes, size_t offset) {
+   if(offset + sizeof(uint32_t) > bytes.size()) {
+      throw Test_Error("XMSS private key encoding is shorter than expected");
+   }
+   return Botan::load_be<uint32_t>(bytes.subspan(offset).first<sizeof(uint32_t)>());
+}
+
+// The first four bytes of an XMSS signature encode the leaf index
+uint32_t xmss_signature_index(std::span<const uint8_t> sig) {
+   return Botan::load_be<uint32_t>(sig.first<sizeof(uint32_t)>());
+}
+
+/**
+ * Offsets within an XMSS private key in the current format
+ */
+struct XMSS_SK_Layout final {
+      size_t n;
+      size_t root;
+      size_t leaf_index;
+      size_t prf;
+      size_t private_seed;
+      size_t legacy_end;
+      size_t section_count;
+      size_t treetop;
+      size_t row;
+      size_t row_size;
+};
+
+XMSS_SK_Layout xmss_sk_layout(const Botan::XMSS_Parameters& params) {
+   XMSS_SK_Layout layout{};
+   layout.n = params.element_size();
+   layout.root = sizeof(uint32_t);
+   layout.leaf_index = layout.root + 2 * layout.n;
+   layout.prf = layout.leaf_index + sizeof(uint32_t);
+   layout.private_seed = layout.prf + layout.n;
+   layout.legacy_end = params._raw_private_key_size();
+   layout.section_count = layout.legacy_end;
+   // A freshly generated key has a single section, holding the treetop
+   layout.treetop = layout.section_count + sizeof(uint32_t);
+   layout.row = layout.treetop + 2 * sizeof(uint32_t);
+   layout.row_size = Botan::Merkle_Treetop::row_size(static_cast<uint32_t>(params.tree_height()), layout.n);
+   return layout;
+}
+
+/**
+ * Tests of the private key encoding, and the tree data cached in the key.
+ */
+class XMSS_Encoding_Test_Base : public Test {
+   protected:
+      static constexpr auto Params = Botan::XMSS_Parameters::XMSS_SHA2_10_256;
+
+      static Botan::XMSS_Parameters params() { return Botan::XMSS_Parameters::from_id(Params); }
+
+      std::vector<uint8_t> message() const { return {0xde, 0xad, 0xbe, 0xef}; }
+
+      std::vector<uint8_t> sign(const Botan::Private_Key& sk) const {
+         Botan::PK_Signer signer(sk, Test::rng(), Botan::PK_Signature_Options());
+         return signer.sign_message(message(), Test::rng());
+      }
+
+      bool verify(const Botan::Public_Key& pk, std::span<const uint8_t> sig) const {
+         Botan::PK_Verifier verifier(pk, Botan::PK_Signature_Options());
+         return verifier.verify_message(message(), sig);
+      }
+
+      static Botan::AlgorithmIdentifier xmss_sk_alg_id(std::string_view oid_name) {
+         return Botan::AlgorithmIdentifier(Botan::OID::from_string(oid_name),
+                                           Botan::AlgorithmIdentifier::USE_EMPTY_PARAM);
+      }
+
+      static Botan::XMSS_PrivateKey load(std::span<const uint8_t> bytes) {
+         return Botan::XMSS_PrivateKey(xmss_sk_alg_id("XMSS-Private-Key"), bytes);
+      }
+
+      static Botan::XMSS_PrivateKey load_legacy(std::span<const uint8_t> bytes) {
+         return Botan::XMSS_PrivateKey(xmss_sk_alg_id("XMSS"), bytes);
+      }
+
+      /**
+       * The fields of the legacy format, which the current format starts with
+       */
+      static std::vector<uint8_t> legacy_fields(std::span<const uint8_t> bytes) {
+         const auto layout = xmss_sk_layout(params());
+         return std::vector<uint8_t>(bytes.begin(), bytes.begin() + layout.legacy_end);
+      }
+
+      /**
+       * The legacy encoding, wrapped in an OCTET STRING as written by older versions
+       */
+      static std::vector<uint8_t> legacy_encoding(std::span<const uint8_t> bytes) {
+         return Botan::DER_Encoder()
+            .encode(legacy_fields(bytes), Botan::ASN1_Type::OctetString)
+            .get_contents_unlocked();
+      }
+
+      static std::span<const uint8_t> treetop_row(std::span<const uint8_t> bytes) {
+         const auto layout = xmss_sk_layout(params());
+         return bytes.subspan(layout.row, layout.row_size);
+      }
+
+      Test::Result test_current_encoding() {
+         Test::Result result("XMSS private key encoding");
+
+         const auto layout = xmss_sk_layout(params());
+         const Botan::XMSS_PrivateKey sk(Params, Test::rng());
+
+         result.test_str_eq(
+            "private key OID", sk.pkcs8_algorithm_identifier().oid().to_string(), "1.3.6.1.4.1.25258.1.20");
+
+         const auto bytes = sk.private_key_bits();
+         result.test_bin_eq("private key bits are the raw private key", sk.raw_private_key(), bytes);
+         result.test_u32_eq("treetop is cached after key generation", u32_at(bytes, layout.section_count), 1);
+         result.test_u32_eq("treetop section tag", u32_at(bytes, layout.treetop), 1);
+         result.test_u32_eq("treetop section length",
+                            u32_at(bytes, layout.treetop + sizeof(uint32_t)),
+                            static_cast<uint32_t>(layout.row_size));
+         result.test_sz_eq("treetop holds all 2^10 leaves", layout.row_size, 1024 * layout.n);
+         result.test_sz_eq("encoding has no trailing data", bytes.size(), layout.row + layout.row_size);
+
+         const auto loaded = load(bytes);
+         result.test_bin_eq("loaded key has the same public key", loaded.public_key_bits(), sk.public_key_bits());
+         result.test_bin_eq("encoding round trips", loaded.private_key_bits(), bytes);
+
+         result.test_is_true("signature of generated key is valid", verify(sk, sign(sk)));
+         const auto sig = sign(loaded);
+         result.test_u32_eq("loaded key continues at the next index", xmss_signature_index(sig), 1);
+         result.test_is_true("signature of loaded key is valid", verify(sk, sig));
+
+         // A key constructed from its components only computes the tree when signing
+         const auto field = [&](size_t offset) {
+            return Botan::secure_vector<uint8_t>(bytes.begin() + offset, bytes.begin() + offset + layout.n);
+         };
+         const Botan::XMSS_PrivateKey from_components(Params,
+                                                      2,
+                                                      field(layout.private_seed),
+                                                      field(layout.prf),
+                                                      field(layout.root),
+                                                      field(layout.root + layout.n));
+         const auto uncached = from_components.private_key_bits();
+         result.test_u32_eq("no cached tree before signing", u32_at(uncached, layout.section_count), 0);
+         result.test_sz_eq("encoding without cached tree", uncached.size(), layout.section_count + sizeof(uint32_t));
+         result.test_is_true("key without cached tree signs validly", verify(sk, sign(from_components)));
+         result.test_bin_eq(
+            "signing caches the treetop", treetop_row(from_components.private_key_bits()), treetop_row(bytes));
+
+         return result;
+      }
+
+      Test::Result test_legacy_encoding() {
+         Test::Result result("XMSS legacy private key encoding");
+
+         const Botan::XMSS_PrivateKey sk(Params, Test::rng());
+         sign(sk);
+
+         const auto legacy = legacy_encoding(sk.private_key_bits());
+         const auto loaded = load_legacy(legacy);
+         result.test_bin_eq("legacy key has the same public key", loaded.public_key_bits(), sk.public_key_bits());
+
+         const auto sig = sign(loaded);
+         result.test_u32_eq("legacy key continues at the next index", xmss_signature_index(sig), 1);
+         result.test_is_true("signature of legacy key is valid", verify(sk, sig));
+
+         const auto reencoded = loaded.private_key_bits();
+         const auto layout = xmss_sk_layout(params());
+         result.test_u32_eq("re-encoded legacy key caches the treetop", u32_at(reencoded, layout.section_count), 1);
+         result.test_bin_eq("re-encoded legacy key starts with the legacy fields",
+                            legacy_fields(reencoded),
+                            legacy_fields(sk.private_key_bits()));
+         result.test_bin_eq("re-encoded treetop", treetop_row(reencoded), treetop_row(sk.private_key_bits()));
+
+         result.test_no_throw("legacy fields without an OCTET STRING", [&] {
+            const auto key = load_legacy(legacy_fields(sk.private_key_bits()));
+            result.test_bin_eq("same public key", key.public_key_bits(), sk.public_key_bits());
+         });
+
+         // A PKCS #8 structure as written by older versions
+         const auto pkcs8 = Botan::DER_Encoder()
+                               .start_sequence()
+                               .encode(size_t(0))
+                               .encode(xmss_sk_alg_id("XMSS"))
+                               .encode(legacy, Botan::ASN1_Type::OctetString)
+                               .end_cons()
+                               .get_contents_unlocked();
+         const auto from_pkcs8 = Botan::PKCS8::load_key(pkcs8);
+         result.test_bin_eq(
+            "legacy PKCS #8 key has the same public key", from_pkcs8->public_key_bits(), sk.public_key_bits());
+         result.test_is_true("signature of legacy PKCS #8 key is valid", verify(sk, sign(*from_pkcs8)));
+
+         return result;
+      }
+
+      Test::Result test_algorithm_identifiers() {
+         Test::Result result("XMSS private key algorithm identifiers");
+
+         const Botan::XMSS_PrivateKey sk(Params, Test::rng());
+         const auto current = sk.private_key_bits();
+         const auto legacy = legacy_encoding(current);
+
+         const auto from_pkcs8 = Botan::PKCS8::load_key(sk.private_key_info());
+         result.test_bin_eq("PKCS #8 round trip", from_pkcs8->private_key_bits(), current);
+
+         const auto loads_raw = [&](std::string_view what, std::span<const uint8_t> bytes) {
+            result.test_no_throw(what, [&] {
+               const Botan::XMSS_PrivateKey key(Botan::AlgorithmIdentifier(), bytes);
+               result.test_bin_eq("same public key", key.public_key_bits(), sk.public_key_bits());
+            });
+         };
+
+         loads_raw("raw bytes in the current format", current);
+         loads_raw("raw bytes in the legacy format", legacy);
+         loads_raw("raw bytes in the legacy format without an OCTET STRING", legacy_fields(current));
+
+         result.test_throws<Botan::Decoding_Error>("legacy OID with the current format", [&] { load_legacy(current); });
+         result.test_throws<Botan::Decoding_Error>("current OID with the legacy format",
+                                                   [&] { load(legacy_fields(current)); });
+         result.test_throws<Botan::Decoding_Error>("private key OID with parameters", [&] {
+            const Botan::XMSS_PrivateKey key(Botan::AlgorithmIdentifier(Botan::OID::from_string("XMSS-Private-Key"),
+                                                                        Botan::AlgorithmIdentifier::USE_NULL_PARAM),
+                                             current);
+         });
+         result.test_throws<Botan::Decoding_Error>(
+            "unrelated OID", [&] { const Botan::XMSS_PrivateKey key(xmss_sk_alg_id("RSA"), current); });
+
+         return result;
+      }
+
+      Test::Result test_root_is_taken_from_encoding() {
+         Test::Result result("XMSS root is not recomputed on load");
+
+         const auto layout = xmss_sk_layout(params());
+         const Botan::XMSS_PrivateKey sk(Params, Test::rng());
+
+         auto bytes = sk.private_key_bits();
+         bytes.at(layout.private_seed) ^= 0x01;
+
+         const auto corrupted = load(bytes);
+         result.test_bin_eq(
+            "public key is taken from the stored root", corrupted.public_key_bits(), sk.public_key_bits());
+
+         result.test_is_true("strong key check of a valid key passes", sk.check_key(Test::rng(), true));
+         result.test_is_true("weak key check does not compute the tree", corrupted.check_key(Test::rng(), false));
+         result.test_is_true("strong key check detects a seed not matching the root",
+                             !corrupted.check_key(Test::rng(), true));
+
+         result.test_throws<Botan::Internal_Error>("a signature not matching the root is not released",
+                                                   [&] { sign(corrupted); });
+         result.test_throws<Botan::Invalid_State>("a seed not matching the root is detected once recomputed",
+                                                  [&] { sign(corrupted); });
+
+         return result;
+      }
+
+      Test::Result test_corrupt_cache_is_discarded() {
+         Test::Result result("XMSS corrupted cache data");
+
+         const auto layout = xmss_sk_layout(params());
+         const Botan::XMSS_PrivateKey sk(Params, Test::rng());
+         const auto bytes = sk.private_key_bits();
+
+         const auto signs_validly_after_flipping = [&](std::string_view what, size_t offset) {
+            auto corrupted = bytes;
+            corrupted.at(offset) ^= 0x01;
+            const auto loaded = load(corrupted);
+            const auto sig = sign(loaded);
+            result.test_is_true(Botan::fmt("{}: signature is valid", what), verify(sk, sig));
+            result.test_bin_eq(Botan::fmt("{}: treetop is recomputed", what),
+                               treetop_row(loaded.private_key_bits()),
+                               treetop_row(bytes));
+         };
+
+         signs_validly_after_flipping("first leaf", layout.row);
+         signs_validly_after_flipping("last leaf", layout.row + layout.row_size - 1);
+
+         auto corrupted_root = bytes;
+         corrupted_root.at(layout.root) ^= 0x01;
+         const auto loaded = load(corrupted_root);
+         result.test_throws<Botan::Invalid_State>("signing with a corrupted root fails", [&] { sign(loaded); });
+
+         return result;
+      }
+
+      Test::Result test_unknown_sections_are_ignored() {
+         Test::Result result("XMSS unknown private key sections");
+
+         const auto layout = xmss_sk_layout(params());
+         const Botan::XMSS_PrivateKey sk(Params, Test::rng());
+
+         auto bytes = sk.private_key_bits();
+         Botan::store_be(u32_at(bytes, layout.section_count) + 1, bytes.data() + layout.section_count);
+         const auto unknown = Botan::concat<Botan::secure_vector<uint8_t>>(
+            Botan::store_be(uint32_t(0x7fffffff)), Botan::store_be(uint32_t(3)), std::array<uint8_t, 3>{1, 2, 3});
+         bytes.insert(bytes.end(), unknown.begin(), unknown.end());
+
+         const auto loaded = load(bytes);
+         result.test_is_true("key with an unknown section signs validly", verify(sk, sign(loaded)));
+
+         return result;
+      }
+
+      Test::Result test_malformed_encodings_are_rejected() {
+         Test::Result result("XMSS malformed private key encodings");
+
+         const auto layout = xmss_sk_layout(params());
+         const Botan::XMSS_PrivateKey sk(Params, Test::rng());
+         const auto bytes = sk.private_key_bits();
+
+         const auto rejects = [&](std::string_view what, const auto& patch) {
+            auto patched = bytes;
+            patch(patched);
+            result.test_throws<Botan::Decoding_Error>(what, [&] { load(patched); });
+         };
+
+         rejects("trailing data", [](auto& b) { b.push_back(0); });
+         rejects("truncated", [](auto& b) { b.pop_back(); });
+         rejects("missing section", [&](auto& b) { Botan::store_be(uint32_t(2), b.data() + layout.section_count); });
+         rejects("wrong treetop length", [&](auto& b) {
+            Botan::store_be(static_cast<uint32_t>(layout.row_size - 1), b.data() + layout.treetop + sizeof(uint32_t));
+         });
+         rejects("two treetops", [&](auto& b) {
+            Botan::store_be(uint32_t(2), b.data() + layout.section_count);
+            const std::vector<uint8_t> section(b.begin() + layout.treetop, b.end());
+            b.insert(b.end(), section.begin(), section.end());
+         });
+         rejects("unknown WOTS+ derivation method", [&](auto& b) { b.at(layout.legacy_end - 1) = 0; });
+
+         return result;
+      }
+
+      Test::Result test_subtrees() {
+         Test::Result result("XMSS trees with subtrees");
+
+         // Trees higher than 10 store their nodes down to height h - 10 and
+         // recompute the subtrees below as needed
+         const auto params16 = Botan::XMSS_Parameters::from_id(Botan::XMSS_Parameters::XMSS_SHA2_16_256);
+         const auto layout = xmss_sk_layout(params16);
+         result.test_u32_eq("subtree height", Botan::Merkle_Treetop::subtree_height(16), 6);
+
+         const Botan::XMSS_PrivateKey sk(params16.oid(), Test::rng());
+         auto bytes = sk.private_key_bits();
+         result.test_u32_eq("treetop is cached", u32_at(bytes, layout.section_count), 1);
+         result.test_sz_eq("treetop holds 2^10 nodes", layout.row_size, 1024 * layout.n);
+         result.test_is_true("signature using the subtree of key generation is valid", verify(sk, sign(sk)));
+
+         // Index 63 is the last leaf of the first subtree
+         Botan::store_be(uint32_t(63), bytes.data() + layout.leaf_index);
+         const auto loaded = load(bytes);
+         for(const uint32_t idx : {uint32_t(63), uint32_t(64)}) {
+            const auto sig = sign(loaded);
+            result.test_u32_eq("signature index", xmss_signature_index(sig), idx);
+            result.test_is_true("signature using a recomputed subtree is valid", verify(sk, sig));
+         }
+
+         const auto reloaded = load(loaded.private_key_bits());
+         const auto sig = sign(reloaded);
+         result.test_u32_eq("reloaded key continues at the next index", xmss_signature_index(sig), 65);
+         result.test_is_true("signature of reloaded key is valid", verify(sk, sig));
+
+         return result;
+      }
+
+   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
+      Test::Result test_concurrent_signing() {
+         Test::Result result("XMSS concurrent signing with separately loaded keys");
+
+         const Botan::XMSS_PrivateKey sk(Params, Test::rng());
+         const auto bytes = sk.private_key_bits();
+         const auto legacy = legacy_encoding(bytes);
+
+         // More threads than key objects, so some objects are shared between
+         // threads. Half of the objects are loaded from the legacy encoding.
+         constexpr size_t key_objects = 4;
+         constexpr size_t threads = 8;
+         constexpr size_t sigs_per_thread = 20;
+         constexpr size_t total_sigs = threads * sigs_per_thread;
+
+         std::vector<std::unique_ptr<Botan::XMSS_PrivateKey>> keys;
+         for(size_t i = 0; i != key_objects; ++i) {
+            keys.push_back(std::make_unique<Botan::XMSS_PrivateKey>((i % 2 == 0) ? load(bytes) : load_legacy(legacy)));
+         }
+
+         const auto thread_message = [](size_t t, size_t i) {
+            return std::vector<uint8_t>{static_cast<uint8_t>(t), static_cast<uint8_t>(i)};
+         };
+
+         std::vector<std::future<std::vector<std::vector<uint8_t>>>> futures;
+         futures.reserve(threads);
+         for(size_t t = 0; t != threads; ++t) {
+            futures.push_back(std::async(std::launch::async, [&, t]() {
+               auto thread_rng = Test::new_rng(Botan::fmt("{} thread {}", result.who(), t));
+               Botan::PK_Signer signer(*keys[t % key_objects], *thread_rng, Botan::PK_Signature_Options());
+               std::vector<std::vector<uint8_t>> sigs;
+               for(size_t i = 0; i != sigs_per_thread; ++i) {
+                  sigs.push_back(signer.sign_message(thread_message(t, i), *thread_rng));
+               }
+               return sigs;
+            }));
+         }
+
+         Botan::PK_Verifier verifier(sk, Botan::PK_Signature_Options());
+         std::set<uint32_t> indices;
+         for(size_t t = 0; t != threads; ++t) {
+            try {
+               const auto sigs = futures[t].get();
+               for(size_t i = 0; i != sigs.size(); ++i) {
+                  if(!verifier.verify_message(thread_message(t, i), sigs[i])) {
+                     result.test_failure(Botan::fmt("signature {} of thread {} is invalid", i, t));
+                  }
+                  if(!indices.insert(xmss_signature_index(sigs[i])).second) {
+                     result.test_failure(Botan::fmt("signature {} of thread {} reuses an index", i, t));
+                  }
+               }
+            } catch(const std::exception& e) {
+               result.test_failure(Botan::fmt("thread {} failed", t), e.what());
+            }
+         }
+
+         result.test_sz_eq("each signature used its own index", indices.size(), total_sigs);
+         result.test_is_true("indices are consecutive", !indices.empty() && *indices.rbegin() == total_sigs - 1);
+         result.test_opt_u64_eq("all copies share the state", keys[1]->remaining_operations(), 1024 - total_sigs);
+
+         const auto reloaded = load(keys[1]->private_key_bits());
+         const auto sig = sign(reloaded);
+         result.test_u32_eq("reloaded key continues after all threads", xmss_signature_index(sig), total_sigs);
+         result.test_is_true("signature of reloaded key is valid", verify(sk, sig));
+
+         return result;
+      }
+   #endif
+};
+
+class XMSS_Encoding_Test final : public XMSS_Encoding_Test_Base {
+   public:
+      std::vector<Test::Result> run() final {
+         std::vector<Test::Result> results = {test_current_encoding(),
+                                              test_legacy_encoding(),
+                                              test_algorithm_identifiers(),
+                                              test_root_is_taken_from_encoding(),
+                                              test_corrupt_cache_is_discarded(),
+                                              test_unknown_sections_are_ignored(),
+                                              test_malformed_encodings_are_rejected()};
+
+   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
+         results.push_back(test_concurrent_signing());
+   #endif
+
+         return results;
+      }
+};
+
+/**
+ * Separate from XMSS_Encoding_Test, since computing a tree of height 16 is slow.
+ */
+class XMSS_Subtree_Test final : public XMSS_Encoding_Test_Base {
+   public:
+      std::vector<Test::Result> run() final {
+         if(!Test::run_long_tests()) {
+            return {};
+         }
+         return {test_subtrees()};
+      }
+};
+
 BOTAN_REGISTER_TEST("pubkey", "xmss_sign", XMSS_Signature_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify", XMSS_Signature_Verify_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify_invalid", XMSS_Signature_Verify_Invalid_Tests);
@@ -654,6 +1131,8 @@ BOTAN_REGISTER_TEST_FN("pubkey",
                        xmss_signature_length,
                        xmss_check_key,
                        xmss_fork_safety);
+BOTAN_REGISTER_TEST("pubkey", "xmss_encoding", XMSS_Encoding_Test);
+BOTAN_REGISTER_TEST("pubkey", "xmss_subtrees", XMSS_Subtree_Test);
 
 #endif
 

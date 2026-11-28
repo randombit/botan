@@ -224,14 +224,36 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_Parameters final {
        **/
       size_t estimated_strength() const { return 8 * m_element_size; }
 
-      size_t raw_public_key_size() const { return sizeof(uint32_t) + 2 * element_size(); }
-
-      size_t raw_legacy_private_key_size() const {
-         return raw_public_key_size() + sizeof(uint32_t) + 2 * element_size();
+      BOTAN_DEPRECATED("Deprecated without replacement") size_t raw_public_key_size() const {
+         return _raw_public_key_size();
       }
 
-      size_t raw_private_key_size() const {
-         return raw_legacy_private_key_size() + 1 /* identifier for WOTS+ key derivation method */;
+      BOTAN_DEPRECATED("This is no longer accurate and will be removed") size_t raw_legacy_private_key_size() const {
+         return _raw_legacy_private_key_size();
+      }
+
+      BOTAN_DEPRECATED("This is no longer accurate and will be removed") size_t raw_private_key_size() const {
+         return _raw_private_key_size();
+      }
+
+      /**
+       * Size of the encoded public key. For internal use only.
+       */
+      size_t _raw_public_key_size() const { return sizeof(uint32_t) + 2 * element_size(); }
+
+      /**
+       * Size of a private key created by Botan 2. For internal use only.
+       */
+      size_t _raw_legacy_private_key_size() const {
+         return _raw_public_key_size() + sizeof(uint32_t) + 2 * element_size();
+      }
+
+      /**
+       * Size of the private key fields up to and including the WOTS+ key
+       * derivation method. For internal use only.
+       */
+      size_t _raw_private_key_size() const {
+         return _raw_legacy_private_key_size() + 1 /* identifier for WOTS+ key derivation method */;
       }
 
       bool operator==(const XMSS_Parameters& p) const { return m_oid == p.m_oid; }

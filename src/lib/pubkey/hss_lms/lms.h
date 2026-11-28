@@ -11,8 +11,10 @@
 
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/lm_ots.h>
+#include <botan/internal/merkle_tree.h>
 
 #include <optional>
+#include <span>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -181,6 +183,17 @@ class BOTAN_TEST_API LMS_Instance {
       LMS_Identifier m_identifier;
 };
 
+/**
+ * @brief Compute the treetop of an LMS tree from its lowest row (see Merkle_Treetop::row()).
+ *
+ * @param lms_params The LMS parameters of the tree.
+ * @param identifier The identifier (I) of the tree.
+ * @param row The nodes at height Merkle_Treetop::subtree_height(h) from left to right.
+ */
+BOTAN_TEST_API Merkle_Treetop lms_treetop_from_row(const LMS_Params& lms_params,
+                                                   const LMS_Identifier& identifier,
+                                                   std::span<const uint8_t> row);
+
 class LMS_PublicKey;
 
 /**
@@ -211,6 +224,37 @@ class BOTAN_TEST_API LMS_PrivateKey final : public LMS_Instance {
       LMS_PublicKey sign_and_get_pk(StrongSpan<LMS_Signature_Bytes> out_sig,
                                     LMS_Tree_Node_Idx q,
                                     const LMS_Message& msg) const;
+
+      /**
+       * @brief Compute the whole tree.
+       *
+       * @return The treetop, and the subtree containing leaf @p q.
+       */
+      std::pair<Merkle_Treetop, Merkle_Subtree> build_tree(LMS_Tree_Node_Idx q) const;
+
+      /**
+       * @brief Compute the subtree containing leaf @p q.
+       *
+       * @return The subtree, or nullopt if its root does not match @p treetop
+       */
+      std::optional<Merkle_Subtree> build_subtree(const Merkle_Treetop& treetop, LMS_Tree_Node_Idx q) const;
+
+      /**
+       * @brief Sign a message using leaf @p q, taking the authentication path
+       *        from already computed nodes (RFC 8554 5.4.1).
+       *
+       * @param out_sig Output buffer of size LMS_Signature::size()
+       * @param q The leaf to sign with
+       * @param msg The message to sign
+       * @param treetop The treetop of this tree
+       * @param subtree The subtree containing @p q. Unused, and may be null,
+       *                if the subtree height is zero.
+       */
+      void sign_with_nodes(StrongSpan<LMS_Signature_Bytes> out_sig,
+                           LMS_Tree_Node_Idx q,
+                           const LMS_Message& msg,
+                           const Merkle_Treetop& treetop,
+                           const Merkle_Subtree* subtree) const;
 
    private:
       LMS_Seed m_seed;

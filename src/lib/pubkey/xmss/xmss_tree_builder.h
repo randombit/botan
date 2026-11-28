@@ -13,6 +13,7 @@
 
 #include <botan/secmem.h>
 #include <botan/xmss.h>
+#include <botan/internal/merkle_tree.h>
 #include <botan/internal/xmss_address.h>
 #include <botan/internal/xmss_wots.h>
 #include <span>
@@ -41,10 +42,12 @@ class XMSS_Tree_Builder final {
             m_public_seed(public_seed),
             m_private_seed(private_seed) {}
 
-      secure_vector<uint8_t> tree_hash(size_t start_idx,
-                                       size_t target_node_height,
-                                       const XMSS_Address& adrs,
-                                       XMSS_Hash& hash) const;
+      /**
+      * The tree of height @p height at @p adrs
+      *
+      * The result refers to @p hash and to the seeds this object refers to.
+      */
+      Merkle_Tree_Builder merkle_tree(size_t height, const XMSS_Address& adrs, XMSS_Hash& hash) const;
 
       XMSS_WOTS_PrivateKey wots_private_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const;
 

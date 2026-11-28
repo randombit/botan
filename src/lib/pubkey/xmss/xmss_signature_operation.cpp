@@ -22,7 +22,7 @@
 namespace Botan {
 
 XMSS_Signature_Operation::XMSS_Signature_Operation(const XMSS_PrivateKey& private_key) :
-      m_priv_key(private_key), m_hash(private_key.xmss_parameters()) {}
+      m_priv_key(private_key), m_hash(private_key.xmss_parameters()), m_verifier(private_key) {}
 
 size_t XMSS_Signature_Operation::signature_length() const {
    const auto& params = m_priv_key.xmss_parameters();
@@ -40,10 +40,12 @@ std::vector<uint8_t> XMSS_Signature_Operation::sign(RandomNumberGenerator& /*rng
    const std::vector<uint8_t> msg = std::exchange(m_msg_buffer, {});
 
    const auto& params = m_priv_key.xmss_parameters();
+   const size_t n = params.element_size();
 
    // reserve leaf index so it can not be reused by another signature
    // operation using the same private key.
-   const auto leaf_idx = static_cast<uint32_t>(m_priv_key.reserve_unused_leaf_index());
+   std::vector<uint8_t> auth_path_bytes(params.tree_height() * n);
+   const auto leaf_idx = static_cast<uint32_t>(m_priv_key.reserve_leaf(auth_path_bytes, m_hash));
 
    secure_vector<uint8_t> index_bytes;
    secure_vector<uint8_t> randomness;
@@ -59,15 +61,12 @@ std::vector<uint8_t> XMSS_Signature_Operation::sign(RandomNumberGenerator& /*rng
    const auto msg_hash = m_hash.h_msg_final();
 
    wots_keysig_t auth_path(params.tree_height());
-
-   XMSS_Address adrs;
-   adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
-
    for(size_t j = 0; j < params.tree_height(); j++) {
-      const size_t k = (leaf_idx / (static_cast<size_t>(1) << j)) ^ 0x01;
-      auth_path[j] = m_priv_key.tree_hash(k * (static_cast<size_t>(1) << j), j, adrs, m_hash);
+      const auto node = std::span(auth_path_bytes).subspan(j * n, n);
+      auth_path[j].assign(node.begin(), node.end());
    }
 
+   XMSS_Address adrs;
    adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
    adrs.set_ots_address(leaf_idx);
 
@@ -77,7 +76,15 @@ std::vector<uint8_t> XMSS_Signature_Operation::sign(RandomNumberGenerator& /*rng
       m_priv_key.wots_private_key_for(adrs, m_hash).sign(msg_hash, m_priv_key.public_seed(), adrs, m_hash);
 
    const XMSS_Signature sig(leaf_idx, randomness, tree_sig);
-   return sig.bytes();
+   auto sig_bytes = sig.bytes();
+
+   if(!m_verifier.is_valid_signature_of(msg, sig_bytes)) {
+      // Discard the cache so the next signature is computed from the seed alone
+      m_priv_key.discard_cached_tree();
+      throw Internal_Error("XMSS signature failed verification");
+   }
+
+   return sig_bytes;
 }
 
 AlgorithmIdentifier XMSS_Signature_Operation::algorithm_identifier() const {
