@@ -1561,6 +1561,44 @@ iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
 
         self.assertEqual(value, ptext)
 
+    def test_fpe_ff1(self):
+        # Samples from NIST SP 800-38G
+        key = hex_decode('2B7E151628AED2A6ABF7158809CF4F3C')
+        tweak = hex_decode('39383736353433323130')
+
+        ff1 = botan.FormatPreservingEncryptionFF1(10, key)
+        self.assertEqual(ff1.radix(), 10)
+        self.assertEqual(ff1.minimum_length(), 6)
+
+        ptext = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        self.assertEqual(ff1.encrypt(ptext), [2, 4, 3, 3, 4, 7, 7, 4, 8, 4])
+        ctext = ff1.encrypt(ptext, tweak)
+        self.assertEqual(ctext, [6, 1, 2, 4, 2, 0, 0, 7, 7, 3])
+        self.assertEqual(ff1.decrypt(ctext, tweak), ptext)
+
+        digits = '0123456789'
+        self.assertEqual(ff1.encrypt_str('0123456789', digits, tweak), '6124200773')
+        self.assertEqual(ff1.decrypt_str('6124200773', digits, tweak), '0123456789')
+
+        ff1 = botan.FormatPreservingEncryptionFF1(36, key)
+        alphabet = '0123456789abcdefghijklmnopqrstuvwxyz'
+        tweak = hex_decode('3737373770717273373737')
+        self.assertEqual(ff1.encrypt_str('0123456789abcdefghi', alphabet, tweak), 'a9tv40mll9kdu509eum')
+        self.assertEqual(ff1.decrypt_str('a9tv40mll9kdu509eum', alphabet, tweak), '0123456789abcdefghi')
+
+        with self.assertRaises(ValueError):
+            ff1.encrypt([0, 1, 2, 3, 4, 36])
+        with self.assertRaises(ValueError):
+            ff1.encrypt_str('0123456789ABC', alphabet)
+        with self.assertRaises(ValueError):
+            ff1.encrypt_str('0123456789', digits)
+        with self.assertRaises(botan.BotanException):
+            ff1.encrypt([1, 2, 3])
+        with self.assertRaises(ValueError):
+            botan.FormatPreservingEncryptionFF1(1, key)
+        with self.assertRaises(botan.BotanException):
+            botan.FormatPreservingEncryptionFF1(10, key[:15])
+
     def test_keywrap(self):
         key = hex_decode('00112233445566778899aabbccddeeff')
         kek = hex_decode('000102030405060708090a0b0c0d0e0f')

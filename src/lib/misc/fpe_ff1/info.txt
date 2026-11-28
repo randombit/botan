@@ -1,0 +1,17 @@
+<defines>
+FPE_FF1 -> 20261115
+</defines>
+
+<module_info>
+name -> "FPE FF1"
+brief -> "Format Preserving Encryption (NIST SP 800-38G FF1)"
+</module_info>
+
+<requires>
+aes
+mp
+</requires>
+
+<header:public>
+fpe_ff1.h
+</header:public>

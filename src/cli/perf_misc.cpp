@@ -30,6 +30,10 @@
    #include <botan/fpe_fe1.h>
 #endif
 
+#if defined(BOTAN_HAS_FPE_FF1)
+   #include <botan/fpe_ff1.h>
+#endif
+
 #if defined(BOTAN_HAS_RFC3394_KEYWRAP)
    #include <botan/rfc3394.h>
 #endif
@@ -215,6 +219,48 @@ class PerfTest_FpeFe1 final : public PerfTest {
 };
 
 BOTAN_REGISTER_PERF_TEST("fpe_fe1", PerfTest_FpeFe1);
+
+#endif
+
+#if defined(BOTAN_HAS_FPE_FF1)
+
+class PerfTest_FpeFf1 final : public PerfTest {
+   public:
+      void go(const PerfConfig& config) override {
+         auto enc_timer = config.make_timer("FPE_FF1 encrypt");
+         auto dec_timer = config.make_timer("FPE_FF1 decrypt");
+
+         const auto key = config.rng().random_vec(32);
+         const std::vector<uint8_t> tweak(8);  // 8 zeros
+
+         // 16 decimal digits
+         const std::vector<uint16_t> input = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5};
+         auto x = input;
+
+         Botan::FPE_FF1 fpe_ff1(10);
+         fpe_ff1.set_key(key);
+
+         const auto runtime = config.runtime();
+
+         while(enc_timer->under(runtime)) {
+            enc_timer->start();
+            fpe_ff1.encrypt(x, tweak);
+            enc_timer->stop();
+         }
+         config.record_result(*enc_timer);
+
+         for(size_t i = 0; i != enc_timer->events(); ++i) {
+            dec_timer->start();
+            fpe_ff1.decrypt(x, tweak);
+            dec_timer->stop();
+         }
+         config.record_result(*dec_timer);
+
+         BOTAN_ASSERT(x == input, "FPE works");
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("fpe_ff1", PerfTest_FpeFf1);
 
 #endif
 

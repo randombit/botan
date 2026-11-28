@@ -19,7 +19,7 @@ It uses botan's ffi module, which exposes a C API.
 from __future__ import annotations
 
 from binascii import hexlify
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from ctypes import (
     CDLL,
     CFUNCTYPE,
@@ -33,6 +33,7 @@ from ctypes import (
     c_size_t,
     c_uint,
     c_uint8,
+    c_uint16,
     c_uint32,
     c_uint64,
     c_void_p,
@@ -53,6 +54,7 @@ from typing import Any, Callable, Union
 # Botan 3.13.0, but loads any library from Botan 3.0.0 onwards. Functionality
 # which the loaded library does not provide raises BotanFunctionUnavailable.
 #
+# 3.15.0 - FF1 format preserving encryption
 # 3.13.0 - botan_hash_security_level, SPAKE2+, RFC 3779 extensions
 # 3.12.0 - EcScalar/EcPoint, DRBG
 # 3.11.0 - XOF API, CRL creation
@@ -727,6 +729,11 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_fpe_destroy, [c_void_p])
     ffi_api(dll.botan_fpe_encrypt, [c_void_p, c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_fpe_decrypt, [c_void_p, c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_fpe_ff1_init, [c_void_p, c_size_t, c_char_p, c_size_t])
+    ffi_api(dll.botan_fpe_ff1_destroy, [c_void_p])
+    ffi_api(dll.botan_fpe_ff1_minimum_length, [c_void_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_fpe_ff1_encrypt, [c_void_p, POINTER(c_uint16), c_size_t, c_char_p, c_size_t])
+    ffi_api(dll.botan_fpe_ff1_decrypt, [c_void_p, POINTER(c_uint16), c_size_t, c_char_p, c_size_t])
 
     # SRP6-a
     ffi_api(dll.botan_srp6_server_session_init, [c_void_p])
@@ -3826,6 +3833,65 @@ class FormatPreservingEncryptionFE1(_NonCopyable):
         bits = _ctype_bits(tweak)
         _DLL.botan_fpe_decrypt(self.__obj, r._handle(), bits, len(bits))
         return r
+
+class FormatPreservingEncryptionFF1(_NonCopyable):
+    """Format preserving encryption using FF1 from NIST SP 800-38G, with AES"""
+
+    def __init__(self, radix: int, key: bytes):
+        """Create an instance encrypting sequences of numerals in the range
+        [0,radix) under ``key``, which must be a 16, 24 or 32 byte AES key.
+        The radix must be between 2 and 65536."""
+        self.__obj = c_void_p(0)
+        self.__radix = radix
+        if radix < 2 or radix > 65536:
+            raise ValueError("Radix is outside of the defined FF1 range")
+        _DLL.botan_fpe_ff1_init(byref(self.__obj), c_size_t(radix), key, len(key))
+
+    def __del__(self):
+        _DLL.botan_fpe_ff1_destroy(self.__obj)
+
+    def radix(self) -> int:
+        """Return the radix"""
+        return self.__radix
+
+    def minimum_length(self) -> int:
+        """Return the length of the shortest sequence of numerals that is accepted"""
+        return _call_fn_returning_sz(lambda l: _DLL.botan_fpe_ff1_minimum_length(self.__obj, l))
+
+    def __crypt(self, fn, numerals: Sequence[int], tweak: str | bytes) -> list[int]:
+        if any(x < 0 or x >= self.__radix for x in numerals):
+            raise ValueError("FF1 numeral is outside the radix")
+        buf = (c_uint16 * len(numerals))(*numerals)
+        bits = _ctype_bits(tweak)
+        fn(self.__obj, buf, len(buf), bits, len(bits))
+        return list(buf)
+
+    def encrypt(self, numerals: Sequence[int], tweak: str | bytes = b'') -> list[int]:
+        """Encrypt a sequence of numerals, returning a list of the same length"""
+        return self.__crypt(_DLL.botan_fpe_ff1_encrypt, numerals, tweak)
+
+    def decrypt(self, numerals: Sequence[int], tweak: str | bytes = b'') -> list[int]:
+        """Decrypt a sequence of numerals, returning a list of the same length"""
+        return self.__crypt(_DLL.botan_fpe_ff1_decrypt, numerals, tweak)
+
+    def encrypt_str(self, msg: str, alphabet: str, tweak: str | bytes = b'') -> str:
+        """Encrypt a string, where ``alphabet`` has exactly radix distinct
+        characters and ``msg`` consists only of characters from ``alphabet``"""
+        return self.__crypt_str(self.encrypt, msg, alphabet, tweak)
+
+    def decrypt_str(self, msg: str, alphabet: str, tweak: str | bytes = b'') -> str:
+        """Decrypt a string previously encrypted with ``encrypt_str``"""
+        return self.__crypt_str(self.decrypt, msg, alphabet, tweak)
+
+    def __crypt_str(self, fn, msg: str, alphabet: str, tweak: str | bytes) -> str:
+        if len(alphabet) != self.__radix or len(set(alphabet)) != self.__radix:
+            raise ValueError("FF1 alphabet must consist of radix distinct characters")
+        index = {c: i for (i, c) in enumerate(alphabet)}
+        try:
+            numerals = [index[c] for c in msg]
+        except KeyError as e:
+            raise ValueError("FF1 input contains a character outside the alphabet") from e
+        return "".join(alphabet[x] for x in fn(numerals, tweak))
 
 class HOTP(_NonCopyable):
     """Counter based one time passwords (RFC 4226)"""
