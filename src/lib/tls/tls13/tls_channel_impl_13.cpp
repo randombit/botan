@@ -41,6 +41,7 @@ bool is_error_alert(const Botan::TLS::Alert& alert) {
 }  // namespace
 
 Channel_Impl_13::Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
+                                 const std::shared_ptr<CryptoOperations>& crypto,
                                  const std::shared_ptr<Session_Manager>& session_manager,
                                  const std::shared_ptr<Credentials_Manager>& credentials_manager,
                                  const std::shared_ptr<RandomNumberGenerator>& rng,
@@ -49,9 +50,10 @@ Channel_Impl_13::Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
                                  TLS_Flavor flavor) :
       m_side(connection_side),
       m_flavor(flavor),
-      m_transcript_hash(flavor),
-      m_channel_io(Channel_IO::create(m_side, m_flavor, policy, callbacks)),
+      m_transcript_hash(std::in_place, flavor, crypto),
+      m_channel_io(Channel_IO::create(m_side, m_flavor, policy, callbacks, crypto)),
       m_callbacks(callbacks),
+      m_crypto(crypto),
       m_session_manager(session_manager),
       m_credentials_manager(credentials_manager),
       m_rng(rng),
@@ -59,6 +61,7 @@ Channel_Impl_13::Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
       m_can_read(true),
       m_can_write(true) {
    BOTAN_ASSERT_NONNULL(m_callbacks);
+   BOTAN_ASSERT_NONNULL(m_crypto);
    BOTAN_ASSERT_NONNULL(m_session_manager);
    BOTAN_ASSERT_NONNULL(m_credentials_manager);
    BOTAN_ASSERT_NONNULL(m_rng);
@@ -379,6 +382,7 @@ void Channel_Impl_13::expect_downgrade(const Server_Information& server_info,
       Botan::TLS::Channel::IO_BUF_DEFAULT_SIZE,
       {},
       m_callbacks,
+      m_crypto,
       m_session_manager,
       m_credentials_manager,
       m_rng,

@@ -15,6 +15,7 @@
    #include <botan/tls_alert.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_ciphersuite.h>
+   #include <botan/tls_crypto_operations.h>
    #include <botan/tls_exceptn.h>
    #include <botan/tls_magic.h>
    #include <botan/tls_messages_13.h>
@@ -104,7 +105,8 @@ std::shared_ptr<TLS::Channel_IO> make_channel_io(
    TLS::Connection_Side side,
    const std::shared_ptr<Mock_Callbacks>& callbacks,
    std::shared_ptr<const TLS::Policy> policy = std::make_shared<Test_Policy>()) {
-   return TLS::Channel_IO::create(side, TLS::TLS_Flavor::TLS, std::move(policy), callbacks);
+   return TLS::Channel_IO::create(
+      side, TLS::TLS_Flavor::TLS, std::move(policy), callbacks, std::make_shared<TLS::CryptoOperations>());
 }
 
 std::optional<TLS::Transcript_Hash_State> make_transcript_hash() {

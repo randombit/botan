@@ -12,6 +12,7 @@
 #define BOTAN_TLS_MESSAGES_H_
 
 #include <botan/tls_algos.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_handshake_msg.h>
 #include <botan/tls_session_id.h>
 #include <botan/tls_signature_scheme.h>

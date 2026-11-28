@@ -33,7 +33,8 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
                                                                            RandomNumberGenerator& rng,
                                                                            const Policy& policy,
                                                                            Callbacks& cb,
-                                                                           TLS_Flavor flavor) {
+                                                                           TLS_Flavor flavor,
+                                                                           CryptoOperations& crypto) {
    const auto& exts = ch.extensions();
 
    // RFC 8446 4.2.9
@@ -88,9 +89,9 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
                                policy.dtls_server_require_cookie_exchange();
 
    if(hello_retry_request_allowed && (hrr_for_cookie || hrr_for_key_exchange)) {
-      return Hello_Retry_Request(ch, selected_group, policy, credentials_mgr, cb, flavor);
+      return Hello_Retry_Request(ch, selected_group, policy, credentials_mgr, cb, flavor, crypto);
    } else {
-      return Server_Hello_13(ch, selected_group, session_mgr, credentials_mgr, rng, cb, policy, flavor);
+      return Server_Hello_13(ch, selected_group, session_mgr, credentials_mgr, rng, cb, policy, flavor, crypto);
    }
 }
 
@@ -319,7 +320,8 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
                                  RandomNumberGenerator& rng,
                                  Callbacks& cb,
                                  const Policy& policy,
-                                 TLS_Flavor flavor) :
+                                 TLS_Flavor flavor,
+                                 CryptoOperations& crypto) :
       Server_Hello(std::make_unique<Server_Hello_Internal>(
          flavor.legacy_version(),
          // RFC 9846 4.2.3
@@ -330,7 +332,7 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
          //    DTLS servers MUST NOT echo the "legacy_session_id" value from the
          //    client [...].
          flavor.is_streaming() ? ch.session_id() : Session_ID{},
-         make_server_hello_random(rng, flavor.tls_13_version(), cb, policy, flavor),
+         make_server_hello_random(rng, flavor.tls_13_version(), cb, policy, flavor, crypto),
          choose_ciphersuite(ch, policy, flavor),
          uint8_t(0) /* compression method */
          )) {
@@ -348,7 +350,7 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
    if(key_exchange_group.has_value()) {
       BOTAN_ASSERT_NOMSG(ch.extensions().has<Key_Share>());
       m_data->extensions().add(Key_Share::create_as_encapsulation(
-         key_exchange_group.value(), *ch.extensions().get<Key_Share>(), policy, cb, rng));
+         key_exchange_group.value(), *ch.extensions().get<Key_Share>(), policy, crypto, rng));
    }
 
    const auto& ch_exts = ch.extensions();
@@ -369,7 +371,7 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
       //       (PSK-based handshake without an additional ephemeral key exchange)
       if(value_exists(psk_modes->modes(), PSK_Key_Exchange_Mode::PSK_DHE_KE)) {
          if(auto server_psk = ch_exts.get<PSK>()->select_offered_psk(
-               ch.sni_hostname(), cs.value(), session_mgr, credentials_mgr, cb, policy)) {
+               ch.sni_hostname(), cs.value(), session_mgr, credentials_mgr, cb, policy, crypto)) {
             // RFC 8446 4.2.11
             //    In order to accept PSK key establishment, the server sends a
             //    "pre_shared_key" extension indicating the selected identity.
@@ -406,7 +408,8 @@ Hello_Retry_Request::Hello_Retry_Request(const Client_Hello_13& ch,
                                          const Policy& policy,
                                          Credentials_Manager& credentials_manager,
                                          Callbacks& cb,
-                                         TLS_Flavor flavor) :
+                                         TLS_Flavor flavor,
+                                         const CryptoOperations& crypto) :
       Server_Hello_13(std::make_unique<Server_Hello_Internal>(
                          flavor.legacy_version(),
                          // RFC 9147 5.
@@ -480,7 +483,7 @@ Hello_Retry_Request::Hello_Retry_Request(const Client_Hello_13& ch,
       }
 
       m_data->extensions().add(new Cookie(
-         calculate_cookie(ch.cookie_input_data(), client_identity, credentials_manager.dtls_cookie_secret())));
+         calculate_cookie(ch.cookie_input_data(), client_identity, credentials_manager.dtls_cookie_secret(), crypto)));
    }
 
    // NOLINTEND(*-owning-memory)

@@ -41,14 +41,17 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
                       std::vector<std::string> next_protocols,
                       std::optional<Session_with_Handle>& session,
                       std::vector<ExternalPSK> psks,
-                      TLS_Flavor flavor);
+                      TLS_Flavor flavor,
+                      const std::shared_ptr<CryptoOperations>& crypto);
 
-      static std::variant<Client_Hello_13, Client_Hello_12_Shim> parse(std::span<const uint8_t> buf, TLS_Flavor flavor);
+      static std::variant<Client_Hello_13, Client_Hello_12_Shim> parse(
+         std::span<const uint8_t> buf, TLS_Flavor flavor, const CryptoOperations& crypto = CryptoOperations());
 
       void retry(const Hello_Retry_Request& hrr,
                  const Transcript_Hash_State& transcript_hash_state,
                  Callbacks& cb,
-                 RandomNumberGenerator& rng);
+                 RandomNumberGenerator& rng,
+                 CryptoOperations& crypto);
 
       /**
       * Select the highest protocol version from the list of versions
@@ -120,7 +123,8 @@ class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello {
                       RandomNumberGenerator& rng,
                       Callbacks& cb,
                       const Policy& policy,
-                      TLS_Flavor flavor);
+                      TLS_Flavor flavor,
+                      CryptoOperations& crypto);
 
       explicit Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Hello_Retry_Request_Creation_Tag tag);
 
@@ -132,7 +136,8 @@ class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello {
                                                                        RandomNumberGenerator& rng,
                                                                        const Policy& policy,
                                                                        Callbacks& cb,
-                                                                       TLS_Flavor flavor);
+                                                                       TLS_Flavor flavor,
+                                                                       CryptoOperations& crypto);
 
       static std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12_Shim> parse(
          std::span<const uint8_t> buf, TLS_Flavor flavor);
@@ -158,7 +163,8 @@ class BOTAN_UNSTABLE_API Hello_Retry_Request final : public Server_Hello_13 {
                           const Policy& policy,
                           Credentials_Manager& credentials_manager,
                           Callbacks& cb,
-                          TLS_Flavor flavor);
+                          TLS_Flavor flavor,
+                          const CryptoOperations& crypto);
 
    public:
       Handshake_Type type() const override { return Handshake_Type::HelloRetryRequest; }
@@ -195,7 +201,11 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
    public:
       class Certificate_Entry {
          public:
-            Certificate_Entry(TLS_Data_Reader& reader, Connection_Side side, Certificate_Type cert_type, bool is_leaf);
+            Certificate_Entry(TLS_Data_Reader& reader,
+                              Connection_Side side,
+                              Certificate_Type cert_type,
+                              bool is_leaf,
+                              const CryptoOperations& crypto);
             explicit Certificate_Entry(const X509_Certificate& cert);
             explicit Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key);
 
@@ -271,7 +281,8 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
       Certificate_13(std::span<const uint8_t> buf,
                      const Policy& policy,
                      Connection_Side side,
-                     Certificate_Type cert_type);
+                     Certificate_Type cert_type,
+                     const CryptoOperations& crypto = CryptoOperations());
 
       /**
       * Validate a Certificate message regarding what extensions are expected based on
@@ -365,10 +376,10 @@ class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
                             Connection_Side whoami,
                             Credentials_Manager& creds_mgr,
                             const Policy& policy,
-                            Callbacks& callbacks,
+                            CryptoOperations& crypto,
                             RandomNumberGenerator& rng);
 
-      bool verify(const Public_Key& public_key, Callbacks& callbacks, const Transcript_Hash& transcript_hash) const;
+      bool verify(const Public_Key& public_key, CryptoOperations& crypto, const Transcript_Hash& transcript_hash) const;
 
    private:
       Connection_Side m_side;

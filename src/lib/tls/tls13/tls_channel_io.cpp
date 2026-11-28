@@ -9,6 +9,7 @@
 #include <botan/internal/tls_channel_io.h>
 
 #include <botan/tls_callbacks.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/bit_ops.h>
@@ -30,7 +31,7 @@ std::optional<Channel_IO::ReceiveEvent> Channel_IO::next_pending_handshake_messa
 
    if(!handshake_complete) {
       BOTAN_ASSERT_NOMSG(transcript_hash.has_value());
-      auto handshake_msg = hs_layer.next_message(policy(), *transcript_hash);
+      auto handshake_msg = hs_layer.next_message(policy(), *transcript_hash, crypto());
       if(!handshake_msg.has_value()) {
          return std::nullopt;
       }
@@ -365,8 +366,13 @@ constexpr size_t max_retained_write_buffer_size = 4 * (TLS_HEADER_SIZE + MAX_CIP
 
 class TLS_Channel_IO final : public Channel_IO {
    public:
-      TLS_Channel_IO(Connection_Side side, std::shared_ptr<const Policy> policy, std::shared_ptr<Callbacks> callbacks) :
-            Channel_IO(side, std::move(policy), std::move(callbacks)), m_record_layer(side), m_handshake_layer(side) {}
+      TLS_Channel_IO(Connection_Side side,
+                     std::shared_ptr<const Policy> policy,
+                     std::shared_ptr<Callbacks> callbacks,
+                     std::shared_ptr<CryptoOperations> crypto) :
+            Channel_IO(side, std::move(policy), std::move(callbacks), std::move(crypto)),
+            m_record_layer(side),
+            m_handshake_layer(side) {}
 
       void send_data(Record_Type record_type, std::span<const uint8_t> payload, Cipher_State* cipher_state) override {
          const size_t max_plaintext_payload_size = record_layer().record_payload_size_limit(policy(), cipher_state);
@@ -529,11 +535,13 @@ class TLS_Channel_IO final : public Channel_IO {
 std::shared_ptr<Channel_IO> Channel_IO::create(Connection_Side side,
                                                TLS_Flavor flavor,
                                                std::shared_ptr<const Policy> policy,
-                                               std::shared_ptr<Callbacks> callbacks) {
+                                               std::shared_ptr<Callbacks> callbacks,
+                                               std::shared_ptr<CryptoOperations> crypto) {
+   BOTAN_ASSERT_NONNULL(crypto);
    if(flavor.is_datagram()) {
       throw Not_Implemented("DTLS 1.3 is not yet supported");
    } else {
-      return std::make_shared<TLS_Channel_IO>(side, std::move(policy), std::move(callbacks));
+      return std::make_shared<TLS_Channel_IO>(side, std::move(policy), std::move(callbacks), std::move(crypto));
    }
 }
 

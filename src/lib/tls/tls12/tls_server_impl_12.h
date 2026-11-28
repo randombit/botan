@@ -44,6 +44,7 @@ class Server_Impl_12 final : public Channel_Impl_12 {
       *        values just mean reallocations and copies are more likely.
       */
       static std::shared_ptr<Server_Impl_12> create(const std::shared_ptr<Callbacks>& callbacks,
+                                                    const std::shared_ptr<CryptoOperations>& crypto,
                                                     const std::shared_ptr<Session_Manager>& session_manager,
                                                     const std::shared_ptr<Credentials_Manager>& creds,
                                                     const std::shared_ptr<const Policy>& policy,
@@ -53,13 +54,14 @@ class Server_Impl_12 final : public Channel_Impl_12 {
 
       Server_Impl_12([[maybe_unused]] Private dont_call_me,
                      const std::shared_ptr<Callbacks>& callbacks,
+                     const std::shared_ptr<CryptoOperations>& crypto,
                      const std::shared_ptr<Session_Manager>& session_manager,
                      const std::shared_ptr<Credentials_Manager>& creds,
                      const std::shared_ptr<const Policy>& policy,
                      const std::shared_ptr<RandomNumberGenerator>& rng,
                      TLS_Flavor flavor = TLS_Flavor::TLS,
                      size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE) :
-            Channel_Impl_12(callbacks, session_manager, rng, policy, true, flavor, reserved_io_buffer_size),
+            Channel_Impl_12(callbacks, crypto, session_manager, rng, policy, true, flavor, reserved_io_buffer_size),
             m_creds(creds) {}
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
@@ -71,6 +73,7 @@ class Server_Impl_12 final : public Channel_Impl_12 {
 
       Server_Impl_12([[maybe_unused]] Private dont_call_me, const Channel_Impl::Downgrade_Information& downgrade_info) :
             Channel_Impl_12(downgrade_info.callbacks,
+                            downgrade_info.crypto,
                             downgrade_info.session_manager,
                             downgrade_info.rng,
                             downgrade_info.policy,

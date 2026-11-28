@@ -44,6 +44,7 @@
       #include <botan/hex.h>
       #include <botan/tls_callbacks.h>
       #include <botan/tls_client.h>
+      #include <botan/tls_crypto_operations.h>
       #include <botan/tls_exceptn.h>
       #include <botan/tls_server.h>
       #include <botan/tls_session_manager_memory.h>
@@ -1032,7 +1033,8 @@ class Test_TLS12_Oversized_Session_Ticket final : public Test {
                                            server_info,
                                            0,
                                            std::chrono::system_clock::now());
-         sessions->store(session, Botan::TLS::Session_Ticket(std::vector<uint8_t>(65535, 0xAB)));
+         sessions->store(
+            session, Botan::TLS::Session_Ticket(std::vector<uint8_t>(65535, 0xAB)), Botan::TLS::CryptoOperations());
 
          result.test_no_throw("client sends a ClientHello", [&] {
             const Botan::TLS::Client client(

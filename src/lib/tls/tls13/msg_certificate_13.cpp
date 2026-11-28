@@ -46,7 +46,7 @@ bool certificate_allows_signing(const X509_Certificate& cert) {
 // RFC 7250 3.
 //    The SubjectPublicKeyInfo value in the Certificate payload MUST
 //    contain the DER encoding [X.690] of the SubjectPublicKeyInfo.
-std::unique_ptr<Public_Key> decode_raw_public_key(std::span<const uint8_t> spki) {
+std::unique_ptr<Public_Key> decode_raw_public_key(std::span<const uint8_t> spki, const CryptoOperations& crypto) {
    AlgorithmIdentifier alg_id;
    std::vector<uint8_t> key_bits;
 
@@ -61,7 +61,7 @@ std::unique_ptr<Public_Key> decode_raw_public_key(std::span<const uint8_t> spki)
       throw Decoding_Error("Empty raw public key");
    }
 
-   return load_public_key(alg_id, key_bits);
+   return crypto.load_public_key(spki);
 }
 
 }  // namespace
@@ -320,7 +320,8 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
 Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
                                                      Connection_Side side,
                                                      Certificate_Type cert_type,
-                                                     bool is_leaf) {
+                                                     bool is_leaf,
+                                                     const CryptoOperations& crypto) {
    if(cert_type == Certificate_Type::X509) {
       // RFC 8446 4.2.2
       //    [...] each CertificateEntry contains a DER-encoded X.509
@@ -331,7 +332,7 @@ Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
 
          // We only need the public key for the leaf
          if(is_leaf) {
-            m_raw_public_key = m_certificate->subject_public_key();
+            m_raw_public_key = crypto.load_public_key(m_certificate->subject_public_key_info());
          }
       } catch(Exception& e) {
          // bad_certificate would make more sense but BoGo expects decoding_error
@@ -343,7 +344,7 @@ Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
       //    available encoding used in a PKIX certificate in the form of a
       //    SubjectPublicKeyInfo structure is reused.
       try {
-         m_raw_public_key = decode_raw_public_key(reader.get_tls_length_value(3));
+         m_raw_public_key = decode_raw_public_key(reader.get_tls_length_value(3), crypto);
       } catch(Exception& e) {
          throw TLS_Exception(Alert::DecodeError, e.what());
       }
@@ -420,7 +421,8 @@ std::vector<uint8_t> Certificate_13::Certificate_Entry::serialize() const {
 Certificate_13::Certificate_13(std::span<const uint8_t> buf,
                                const Policy& policy,
                                Connection_Side side,
-                               Certificate_Type cert_type) :
+                               Certificate_Type cert_type,
+                               const CryptoOperations& crypto) :
       m_side(side) {
    TLS_Data_Reader reader("cert message reader", buf);
 
@@ -453,7 +455,7 @@ Certificate_13::Certificate_13(std::span<const uint8_t> buf,
          throw TLS_Exception(Alert::IllegalParameter, "Certificate message contained more than one RawPublicKey");
       }
 
-      m_entries.emplace_back(reader, side, cert_type, is_leaf);
+      m_entries.emplace_back(reader, side, cert_type, is_leaf, crypto);
    }
 
    // RFC 8446 4.4.2

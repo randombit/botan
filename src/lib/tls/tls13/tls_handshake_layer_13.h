@@ -19,6 +19,7 @@
 
 namespace Botan::TLS {
 
+class CryptoOperations;
 class Transcript_Hash_State;
 
 /**
@@ -95,11 +96,13 @@ class BOTAN_TEST_API Handshake_Layer {
        *
        * @param policy the TLS policy
        * @param transcript_hash the transcript hash state to be updated
+       * @param crypto the cryptographic operations used while parsing
        *
        * @return the parsed handshake message, or nullopt if more data is needed to complete the message
        */
       virtual std::optional<Handshake_Message_13> next_message(const Policy& policy,
-                                                               Transcript_Hash_State& transcript_hash) = 0;
+                                                               Transcript_Hash_State& transcript_hash,
+                                                               const CryptoOperations& crypto) = 0;
 
       /**
        * Parses one post-handshake message off the internal buffer that is being filled using `copy_data`.
@@ -156,7 +159,8 @@ class BOTAN_TEST_API Handshake_Layer {
 
       virtual Handshake_Message_13 parse_handshake_message(Handshake_Type type,
                                                            std::span<const uint8_t> msg,
-                                                           const Policy& policy) const;
+                                                           const Policy& policy,
+                                                           const CryptoOperations& crypto) const;
 
       Post_Handshake_Message_13 parse_post_handshake_message(Handshake_Type type, std::span<const uint8_t> msg) const;
 
@@ -179,7 +183,8 @@ class BOTAN_TEST_API TLS_Handshake_Layer final : public Handshake_Layer {
       CopyDataResult copy_data(const Policy& policy, const Handshake_Record& data_from_peer) override;
 
       std::optional<Handshake_Message_13> next_message(const Policy& policy,
-                                                       Transcript_Hash_State& transcript_hash) override;
+                                                       Transcript_Hash_State& transcript_hash,
+                                                       const CryptoOperations& crypto) override;
 
       std::optional<Post_Handshake_Message_13> next_post_handshake_message(const Policy& policy) override;
 

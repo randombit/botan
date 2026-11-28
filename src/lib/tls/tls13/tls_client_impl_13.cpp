@@ -25,6 +25,7 @@
 namespace Botan::TLS {
 
 std::shared_ptr<Client_Impl_13> Client_Impl_13::create(const std::shared_ptr<Callbacks>& callbacks,
+                                                       const std::shared_ptr<CryptoOperations>& crypto,
                                                        const std::shared_ptr<Session_Manager>& session_manager,
                                                        const std::shared_ptr<Credentials_Manager>& creds,
                                                        const std::shared_ptr<const Policy>& policy,
@@ -33,7 +34,7 @@ std::shared_ptr<Client_Impl_13> Client_Impl_13::create(const std::shared_ptr<Cal
                                                        Server_Information server_info,
                                                        const std::vector<std::string>& next_protocols) {
    auto self = std::make_shared<Client_Impl_13>(
-      Private{}, callbacks, session_manager, creds, policy, rng, flavor, std::move(server_info));
+      Private{}, callbacks, crypto, session_manager, creds, policy, rng, flavor, std::move(server_info));
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
    if(self->is_datagram() ? policy->allow_dtls12() : policy->allow_tls12()) {
@@ -73,7 +74,8 @@ std::shared_ptr<Client_Impl_13> Client_Impl_13::create(const std::shared_ptr<Cal
                                        next_protocols,
                                        self->m_handshake->resumed_session,
                                        creds->find_preshared_keys(self->m_info.hostname(), Connection_Side::Client),
-                                       flavor)));
+                                       flavor,
+                                       crypto)));
 
    // RFC 9846 E.4
    //    [...] If offering early data, the [dummy Change Cipher Spec record]
@@ -169,7 +171,7 @@ std::optional<Session_with_Handle> Client_Impl_13::find_session_for_resumption()
    //
    // We therefore assume that the session returned by the `Session_Manager` is
    // suitable for resumption in this context.
-   auto sessions = session_manager().find(m_info, callbacks(), policy());
+   auto sessions = session_manager().find(m_info, callbacks(), policy(), crypto());
    if(sessions.empty()) {
       return std::nullopt;
    }
@@ -395,7 +397,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
    }
 
    auto* my_keyshare = ch.extensions().get<Key_Share>();
-   auto shared_secret = my_keyshare->decapsulate(*sh.extensions().get<Key_Share>(), policy(), callbacks(), rng());
+   auto shared_secret = my_keyshare->decapsulate(*sh.extensions().get<Key_Share>(), policy(), crypto(), rng());
 
    m_transcript_hash->set_algorithm(cipher.value().prf_algo());
 
@@ -425,8 +427,13 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
          return new_cipher_state;
       } else {
          m_handshake->resumed_session.reset();  // might have been set if we attempted a resumption
-         return Cipher_State::init_with_server_hello(
-            m_side, m_flavor, std::move(shared_secret), cipher.value(), m_transcript_hash->current(), secret_logger());
+         return Cipher_State::init_with_server_hello(m_side,
+                                                     m_flavor,
+                                                     std::move(shared_secret),
+                                                     cipher.value(),
+                                                     m_transcript_hash->current(),
+                                                     secret_logger(),
+                                                     crypto_ptr());
       }
    }());
 
@@ -477,7 +484,7 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr) {
    m_transcript_hash =
       Transcript_Hash_State::recreate_after_hello_retry_request(cipher.value().prf_algo(), *m_transcript_hash);
 
-   ch.retry(hrr, *m_transcript_hash, callbacks(), rng());
+   ch.retry(hrr, *m_transcript_hash, callbacks(), rng(), crypto());
 
    callbacks().tls_examine_extensions(hrr.extensions(), Connection_Side::Server, Handshake_Type::HelloRetryRequest);
 
@@ -674,7 +681,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    }
 
    const bool sig_valid = certificate_verify_msg.verify(
-      *m_handshake->state.server_certificate().public_key(), callbacks(), m_transcript_hash->previous());
+      *m_handshake->state.server_certificate().public_key(), crypto(), m_transcript_hash->previous());
 
    if(!sig_valid) {
       throw TLS_Exception(Alert::DecryptError, "Server certificate verification failed");
@@ -736,7 +743,7 @@ void Client_Impl_13::create_client_authentication_flight(Flight& flight) {
                                                                   Connection_Side::Client,
                                                                   credentials_manager(),
                                                                   policy(),
-                                                                  callbacks(),
+                                                                  crypto(),
                                                                   rng())));
    }
 }
@@ -894,7 +901,7 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
                          callbacks().tls_current_timestamp());
 
    if(callbacks().tls_should_persist_resumption_information(session)) {
-      session_manager().store(session, Session_Handle(new_session_ticket.handle()));
+      session_manager().store(session, Session_Handle(new_session_ticket.handle()), crypto());
    }
 }
 

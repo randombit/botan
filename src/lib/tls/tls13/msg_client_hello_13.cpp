@@ -158,7 +158,8 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
                                  std::vector<std::string> next_protocols,
                                  std::optional<Session_with_Handle>& session,
                                  std::vector<ExternalPSK> psks,
-                                 TLS_Flavor flavor) {
+                                 TLS_Flavor flavor,
+                                 const std::shared_ptr<CryptoOperations>& crypto) {
    // RFC 8446 4.1.2
    //    In TLS 1.3, the client indicates its version preferences in the
    //    "supported_versions" extension (Section 4.2.1) and the
@@ -169,7 +170,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    //    "supported_versions" extension (see Section 4.2.1 of [TLS13]) and
    //    the legacy_version field MUST be set to {254, 253} [...]
    m_data->m_legacy_version = flavor.legacy_version();
-   m_data->m_random = make_hello_random(rng, cb, policy);
+   m_data->m_random = make_hello_random(rng, cb, policy, *crypto);
    m_data->m_suites = policy.ciphersuite_list(Protocol_Version::TLS_V13);
 
    // When (D)TLS 1.2 is also allowed, advertise its ciphersuites so a legacy
@@ -199,7 +200,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       //    In compatibility mode (see Appendix D.4), this field MUST be non-empty,
       //    so a client not offering a pre-TLS 1.3 session MUST generate a new
       //    32-byte value.
-      m_data->m_session_id = Session_ID(make_hello_random(rng, cb, policy));
+      m_data->m_session_id = Session_ID(make_hello_random(rng, cb, policy, *crypto));
    }
 
    // NOLINTBEGIN(*-owning-memory)
@@ -215,7 +216,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
          new Supported_Groups(groups_usable_in_version(policy.key_exchange_groups(), Protocol_Version::TLS_V13)));
    }
 
-   m_data->extensions().add(new Key_Share(policy, cb, rng));
+   m_data->extensions().add(new Key_Share(policy, *crypto, rng));
 
    m_data->extensions().add(new Supported_Versions(flavor.tls_13_version(), policy));
 
@@ -283,7 +284,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
 #endif
 
    if(session.has_value() || !psks.empty()) {
-      m_data->extensions().add(new PSK(session, std::move(psks), cb, flavor));
+      m_data->extensions().add(new PSK(session, std::move(psks), cb, crypto, flavor));
    }
    // NOLINTEND(*-owning-memory)
 
@@ -308,13 +309,14 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
          throw TLS_Exception(Alert::InternalError,
                              "Application modified extensions of Client Hello, PSK is not last anymore");
       }
-      calculate_psk_binders(Transcript_Hash_State(flavor));
+      calculate_psk_binders(Transcript_Hash_State(flavor, crypto));
    }
 }
 
 std::variant<Client_Hello_13, Client_Hello_12_Shim> Client_Hello_13::parse(std::span<const uint8_t> buf,
-                                                                           TLS_Flavor flavor) {
-   auto data = std::make_unique<Client_Hello_Internal>(buf, flavor);
+                                                                           TLS_Flavor flavor,
+                                                                           const CryptoOperations& crypto) {
+   auto data = std::make_unique<Client_Hello_Internal>(buf, flavor, crypto);
    const auto version = data->version();
 
    if(version.is_pre_tls_13()) {
@@ -327,7 +329,8 @@ std::variant<Client_Hello_13, Client_Hello_12_Shim> Client_Hello_13::parse(std::
 void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
                             const Transcript_Hash_State& transcript_hash_state,
                             Callbacks& cb,
-                            RandomNumberGenerator& rng) {
+                            RandomNumberGenerator& rng,
+                            CryptoOperations& crypto) {
    BOTAN_STATE_CHECK(m_data->extensions().has<Supported_Groups>());
    BOTAN_STATE_CHECK(m_data->extensions().has<Key_Share>());
 
@@ -335,7 +338,7 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    const auto& supported_groups = m_data->extensions().get<Supported_Groups>()->groups();
 
    if(hrr.extensions().has<Key_Share>()) {
-      m_data->extensions().get<Key_Share>()->retry_offer(*hrr_ks, supported_groups, cb, rng);
+      m_data->extensions().get<Key_Share>()->retry_offer(*hrr_ks, supported_groups, crypto, rng);
    }
 
    // RFC 8446 4.2.2

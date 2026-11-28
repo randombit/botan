@@ -40,6 +40,7 @@ for derivation by applications, and are fully covered by SemVer:
 * ``Credentials_Manager``
 * ``Entropy_Source``
 * ``TLS::Callbacks``
+* ``TLS::CryptoOperations`` (and ``TLS::DefaultCryptoOperations``)
 * ``TLS::Policy`` (and subclasses thereof)
 * ``TLS::Stream<T>``
 

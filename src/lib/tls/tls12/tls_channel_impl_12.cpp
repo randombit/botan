@@ -90,6 +90,7 @@ bool absorb_malformed_input_errors(bool absorb, F fn) {
 }  // namespace
 
 Channel_Impl_12::Channel_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
+                                 const std::shared_ptr<CryptoOperations>& crypto,
                                  const std::shared_ptr<Session_Manager>& session_manager,
                                  const std::shared_ptr<RandomNumberGenerator>& rng,
                                  const std::shared_ptr<const Policy>& policy,
@@ -99,11 +100,13 @@ Channel_Impl_12::Channel_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
       m_is_server(is_server),
       m_flavor(flavor),
       m_callbacks(callbacks),
+      m_crypto(crypto),
       m_session_manager(session_manager),
       m_policy(policy),
       m_rng(rng),
       m_has_been_closed(false) {
    BOTAN_ASSERT_NONNULL(m_callbacks);
+   BOTAN_ASSERT_NONNULL(m_crypto);
    BOTAN_ASSERT_NONNULL(m_session_manager);
    BOTAN_ASSERT_NONNULL(m_rng);
    BOTAN_ASSERT_NONNULL(m_policy);
@@ -502,7 +505,8 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
       false,
       pending->ciphersuite(),
       pending->session_keys(),
-      pending->server_hello().supports_encrypt_then_mac());
+      pending->server_hello().supports_encrypt_then_mac(),
+      crypto());
 
    // The epoch we just left is retained only to absorb reordering, so start its
    // clock now (see read_cipher_state_epoch). Epoch 0 is the plaintext
@@ -539,7 +543,8 @@ void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side) {
                                                 true,
                                                 pending->ciphersuite(),
                                                 pending->session_keys(),
-                                                pending->server_hello().supports_encrypt_then_mac());
+                                                pending->server_hello().supports_encrypt_then_mac(),
+                                                crypto());
 
    m_write_cipher_states[epoch] = write_state;
    prune_old_cipher_states(m_write_cipher_states);
@@ -1198,7 +1203,7 @@ SymmetricKey Channel_Impl_12::key_material_export(std::string_view label,
       throw Invalid_Argument("Channel_Impl_12::key_material_export context is too long");
    }
 
-   auto prf = callbacks().tls12_protocol_specific_kdf(m_active_state->prf_algo());
+   auto prf = crypto().tls12_protocol_specific_kdf(m_active_state->prf_algo());
 
    const auto salt = [&] {
       if(context.empty()) {
