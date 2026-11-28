@@ -93,6 +93,10 @@ snail-mail address (S), and Bitcoin address (B).
   N: Justin Karneges
   D: Qt support modules (mutexes and types), X.509 API design
 
+  N: Stanley Shen
+  E: sshen37@ucsc.edu
+  D: GMAC nonce reuse guard, Classic McEliece private key length validation
+
   N: Kagan Can Sit
   E: kagancansit@hotmail.com
   W: https://kagancansit.github.io
