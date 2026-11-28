@@ -193,8 +193,10 @@ Kyber_PublicKey::Kyber_PublicKey(std::span<const uint8_t> pub_key, KyberMode mod
 }
 
 Kyber_PublicKey::Kyber_PublicKey(const Kyber_PublicKey& other) :
-      m_public(std::make_shared<Kyber_PublicKeyInternal>(
-         other.m_public->mode(), other.m_public->t().clone(), other.m_public->rho())) {}
+      m_public(std::make_shared<Kyber_PublicKeyInternal>(other.m_public->mode(),
+                                                         other.m_public->t().clone(),
+                                                         other.m_public->rho(),
+                                                         other.m_public->precomputed_matrix_At())) {}
 
 std::vector<uint8_t> Kyber_PublicKey::raw_public_key_bits() const {
    return m_public->public_key_bits_raw().get();
