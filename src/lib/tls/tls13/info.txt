@@ -34,3 +34,10 @@ tls_types_13.h
 hkdf
 tls
 </requires>
+
+# RFC 8446 Section 9.1: implementations SHOULD support
+# TLS_CHACHA20_POLY1305_SHA256 and X25519 key exchange
+<recommended>
+chacha20poly1305
+x25519
+</recommended>

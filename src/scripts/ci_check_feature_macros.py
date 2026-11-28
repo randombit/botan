@@ -114,7 +114,7 @@ def collect_build_data(root):
         'cc_macros': set(),
         'sanitizers': set(),
         'module_defines': set(),
-        'module_conditions': [],  # (info.txt path, condition)
+        'module_conditions': [],  # (info.txt path, block, condition)
         'module_references': set(),  # names of OS features, ISAs, archs, compilers used by info.txt files
     }
 
@@ -148,11 +148,12 @@ def collect_build_data(root):
         for block in ['defines', 'internal_defines']:
             for line in blocks.get(block, []):
                 info['module_defines'].add(line.split('->', 1)[0].strip())
-        for line in blocks.get('requires', []):
-            if '?' in line:
-                cond = line.split('?', 1)[0]
-                info['module_conditions'].append((path, cond))
-                info['module_references'].add(cond)
+        for block in ['requires', 'recommended']:
+            for line in blocks.get(block, []):
+                if '?' in line:
+                    cond = line.split('?', 1)[0]
+                    info['module_conditions'].append((path, block, cond))
+                    info['module_references'].add(cond)
         for line in blocks.get('os_features', []):
             info['module_references'].update(line.split(','))
         for line in blocks.get('isa', []):
@@ -300,10 +301,10 @@ def check_module_conditions(root, info):
     """
     valid = set(info['arch_names']) | info['os_features']
     errors = []
-    for (path, cond) in info['module_conditions']:
+    for (path, block, cond) in info['module_conditions']:
         if cond not in valid:
-            errors.append("%s: unknown condition '%s' in <requires>%s" % (
-                os.path.relpath(path, root), cond, suggestion(cond, valid)))
+            errors.append("%s: unknown condition '%s' in <%s>%s" % (
+                os.path.relpath(path, root), cond, block, suggestion(cond, valid)))
     return errors
 
 
