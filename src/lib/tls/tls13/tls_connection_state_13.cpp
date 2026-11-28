@@ -30,7 +30,7 @@ Active_Connection_State_13& Active_Connection_State_13::operator=(Active_Connect
 
 Active_Connection_State_13::Active_Connection_State_13(const Internal::Handshake_State_13_Base& state,
                                                        std::vector<X509_Certificate> peer_certs,
-                                                       std::shared_ptr<const Public_Key> peer_raw_public_key,
+                                                       std::vector<uint8_t> peer_raw_public_key_info,
                                                        std::optional<std::string> psk_identity,
                                                        std::string sni_hostname,
                                                        bool peer_supports_psk_dhe_ke) :
@@ -41,7 +41,7 @@ Active_Connection_State_13::Active_Connection_State_13(const Internal::Handshake
       m_peer_certs(std::move(peer_certs)),
       m_client_random(state.client_hello().random()),
       m_psk_identity(std::move(psk_identity)),
-      m_peer_raw_public_key(std::move(peer_raw_public_key)),
+      m_peer_raw_public_key_info(std::move(peer_raw_public_key_info)),
       m_sni_hostname(std::move(sni_hostname)),
       m_peer_supports_psk_dhe_ke(peer_supports_psk_dhe_ke) {}
 

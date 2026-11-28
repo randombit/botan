@@ -37,7 +37,6 @@
    #include <botan/tls_policy.h>
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager.h>
-   #include <botan/x509_key.h>
    #include <botan/x509cert.h>
    #include <botan/internal/concat_util.h>
    #include <botan/internal/fmt.h>
@@ -207,13 +206,12 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
          certificate_chain = cert_chain;
       }
 
-      void tls_verify_raw_public_key(const Public_Key& raw_pk,
+      void tls_verify_raw_public_key(std::span<const uint8_t> raw_pk_info,
                                      Usage_Type /*usage*/,
                                      std::string_view /*hostname*/,
                                      const TLS::Policy& /*policy*/) override {
          count_callback_invocation("tls_verify_raw_public_key");
-         // TODO: is there a better way to copy a generic public key?
-         raw_public_key = Botan::X509::load_key(raw_pk.subject_public_key());
+         raw_public_key_info.assign(raw_pk_info.begin(), raw_pk_info.end());
       }
 
       std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const override {
@@ -363,7 +361,7 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
    public:
       bool session_activated_called;                           // NOLINT(*-non-private-member-variable*)
       std::vector<Botan::X509_Certificate> certificate_chain;  // NOLINT(*-non-private-member-variable*)
-      std::unique_ptr<Botan::Public_Key> raw_public_key;       // NOLINT(*-non-private-member-variable*)
+      std::vector<uint8_t> raw_public_key_info;                // NOLINT(*-non-private-member-variable*)
       std::string negotiated_psk_identity;                     // NOLINT(*-non-private-member-variable*)
       std::map<std::string, std::vector<std::vector<uint8_t>>>
          serialized_messages;  // NOLINT(*-non-private-member-variable*)
@@ -674,6 +672,8 @@ class TLS_Context {
 
       const std::vector<Botan::X509_Certificate>& certs_verified() const { return m_callbacks->certificate_chain; }
 
+      const std::vector<uint8_t>& raw_public_key_verified() const { return m_callbacks->raw_public_key_info; }
+
       const std::string& psk_identity_negotiated() const { return m_callbacks->negotiated_psk_identity; }
 
       decltype(auto) observed_handshake_messages() const { return m_callbacks->serialized_messages; }
@@ -830,7 +830,7 @@ Botan::TLS::Session as_server_session(const Botan::TLS::Session& session) {
       session.ciphersuite_code(),
       Botan::TLS::Connection_Side::Server,
       {},
-      nullptr,
+      std::span<const uint8_t>(),
       session.server_info(),
       0,
       session.start_time());
@@ -1751,10 +1751,11 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_verify_message",
                                                      });
 
-                     const auto raw_pk = ctx->client.peer_raw_public_key();
-                     result.test_is_true(
-                        "Received server's raw public key",
-                        raw_pk && raw_pk->fingerprint_public() == server_raw_public_key_pair()->fingerprint_public());
+                     const auto server_spki = server_raw_public_key_pair()->subject_public_key();
+                     result.test_bin_eq(
+                        "Verified server's raw public key", ctx->raw_public_key_verified(), server_spki);
+                     result.test_bin_eq(
+                        "Received server's raw public key", ctx->client.peer_raw_public_key_info(), server_spki);
 
                      // ClientFinished contains the entire coalesced client authentication flight
                      // Messages: Certificate, CertificateVerify, Finished
@@ -2716,10 +2717,11 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_session_established",
                                                       "tls_session_activated"});
 
-                     const auto raw_pk = ctx->server.peer_raw_public_key();
-                     result.test_is_true(
-                        "Received client's raw public key",
-                        raw_pk && raw_pk->fingerprint_public() == client_raw_public_key_pair()->fingerprint_public());
+                     const auto client_spki = client_raw_public_key_pair()->subject_public_key();
+                     result.test_bin_eq(
+                        "Verified client's raw public key", ctx->raw_public_key_verified(), client_spki);
+                     result.test_bin_eq(
+                        "Received client's raw public key", ctx->server.peer_raw_public_key_info(), client_spki);
 
                      result.test_is_true("TLS handshake finished", ctx->server.is_active());
                      result.test_is_true("handshake is complete", ctx->server.is_handshake_complete());

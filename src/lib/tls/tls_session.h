@@ -40,6 +40,22 @@ class Callbacks;
  */
 class BOTAN_PUBLIC_API(3, 0) Session_Base {
    public:
+      /**
+       * @param peer_raw_public_key_info DER encoded SubjectPublicKeyInfo of
+       *        the peer's raw public key, or empty if none was used
+       */
+      Session_Base(std::chrono::system_clock::time_point start_time,
+                   Protocol_Version version,
+                   uint16_t ciphersuite,
+                   Connection_Side connection_side,
+                   uint16_t srtp_profile,
+                   bool extended_master_secret,
+                   bool encrypt_then_mac,
+                   const std::vector<X509_Certificate>& peer_certs,
+                   std::span<const uint8_t> peer_raw_public_key_info,
+                   Server_Information server_info);
+
+      BOTAN_DEPRECATED("Use the constructor taking the SubjectPublicKeyInfo")
       Session_Base(std::chrono::system_clock::time_point start_time,
                    Protocol_Version version,
                    uint16_t ciphersuite,
@@ -111,9 +127,17 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
       const std::vector<X509_Certificate>& peer_certs() const { return m_peer_certs; }
 
       /**
-       * Return the raw public key of the peer (possibly empty)
+       * Return the raw public key of the peer (possibly nullptr)
+       *
+       * The key is decoded from peer_raw_public_key_info() on each call.
        */
-      std::shared_ptr<const Public_Key> peer_raw_public_key() const { return m_peer_raw_public_key; }
+      BOTAN_DEPRECATED("Use peer_raw_public_key_info") std::shared_ptr<const Public_Key> peer_raw_public_key() const;
+
+      /**
+       * Return the DER encoded SubjectPublicKeyInfo of the peer's raw
+       * public key, or an empty vector if the peer did not use one
+       */
+      const std::vector<uint8_t>& peer_raw_public_key_info() const { return m_peer_raw_public_key_info; }
 
       /**
        * Return the type of credential used by the peer, or std::nullopt
@@ -124,7 +148,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
             return Certificate_Type::X509;
          }
 
-         if(m_peer_raw_public_key) {
+         if(!m_peer_raw_public_key_info.empty()) {
             return Certificate_Type::RawPublicKey;
          }
 
@@ -152,9 +176,9 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
       bool m_extended_master_secret = false;  // NOLINT(*non-private-member-variable*)
       bool m_encrypt_then_mac = false;        // NOLINT(*non-private-member-variable*)
 
-      std::vector<X509_Certificate> m_peer_certs;               // NOLINT(*non-private-member-variable*)
-      std::shared_ptr<const Public_Key> m_peer_raw_public_key;  // NOLINT(*non-private-member-variable*)
-      Server_Information m_server_info;                         // NOLINT(*non-private-member-variable*)
+      std::vector<X509_Certificate> m_peer_certs;       // NOLINT(*non-private-member-variable*)
+      std::vector<uint8_t> m_peer_raw_public_key_info;  // NOLINT(*non-private-member-variable*)
+      Server_Information m_server_info;                 // NOLINT(*non-private-member-variable*)
 };
 
 /**
@@ -226,7 +250,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Summary final : public Session_Base {
       Session_Summary(const Server_Hello_13& server_hello,
                       Connection_Side side,
                       const std::vector<X509_Certificate>& peer_certs,
-                      std::shared_ptr<const Public_Key> peer_raw_public_key,
+                      std::span<const uint8_t> peer_raw_public_key_info,
                       std::optional<std::string> psk_identity,
                       bool session_was_resumed,
                       Server_Information server_info,
@@ -274,6 +298,7 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
       /**
       * New TLS 1.3 session (sets session start time)
       */
+      BOTAN_DEPRECATED("Use the constructor taking the SubjectPublicKeyInfo")
       Session(const secure_vector<uint8_t>& session_psk,
               const std::optional<uint32_t>& max_early_data_bytes,
               uint32_t ticket_age_add,
@@ -289,6 +314,7 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
       /**
       * New TLS 1.3 session (sets session start time) with an srtp_profile
       */
+      BOTAN_DEPRECATED("Use the constructor taking the SubjectPublicKeyInfo")
       Session(const secure_vector<uint8_t>& session_psk,
               const std::optional<uint32_t>& max_early_data_bytes,
               uint32_t ticket_age_add,
@@ -298,6 +324,25 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
               Connection_Side side,
               const std::vector<X509_Certificate>& peer_certs,
               std::shared_ptr<const Public_Key> peer_raw_public_key,
+              const Server_Information& server_info,
+              uint16_t srtp_profile,
+              std::chrono::system_clock::time_point current_timestamp);
+
+      /**
+      * New TLS 1.3 session (sets session start time) with an srtp_profile
+      *
+      * @param peer_raw_public_key_info DER encoded SubjectPublicKeyInfo of
+      *        the peer's raw public key, or empty if none was used
+      */
+      Session(const secure_vector<uint8_t>& session_psk,
+              const std::optional<uint32_t>& max_early_data_bytes,
+              uint32_t ticket_age_add,
+              std::chrono::seconds lifetime_hint,
+              Protocol_Version version,
+              uint16_t ciphersuite,
+              Connection_Side side,
+              const std::vector<X509_Certificate>& peer_certs,
+              std::span<const uint8_t> peer_raw_public_key_info,
               const Server_Information& server_info,
               uint16_t srtp_profile,
               std::chrono::system_clock::time_point current_timestamp);

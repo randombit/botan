@@ -204,6 +204,11 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
             const X509_Certificate& certificate() const;
             std::shared_ptr<const Public_Key> public_key() const;
 
+            /**
+             * DER encoded SubjectPublicKeyInfo of a raw public key entry
+             */
+            const std::vector<uint8_t>& raw_public_key_info() const;
+
             std::vector<uint8_t> serialize() const;
 
             Extensions& extensions() { return m_extensions; }
@@ -221,6 +226,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
          private:
             std::unique_ptr<X509_Certificate> m_certificate;  // possibly null if raw public key in use
             std::shared_ptr<Public_Key> m_raw_public_key;     // only set for raw public keys and the peer's leaf
+            std::vector<uint8_t> m_raw_public_key_info;       // only set for raw public keys
             Extensions m_extensions;
       };
 
@@ -238,6 +244,12 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
 
       std::shared_ptr<const Public_Key> public_key() const;
       const X509_Certificate& leaf() const;
+
+      /**
+       * DER encoded SubjectPublicKeyInfo, exactly as carried in the message,
+       * if is_raw_public_key()
+       */
+      const std::vector<uint8_t>& raw_public_key_info() const;
 
       const std::vector<uint8_t>& request_context() const { return m_request_context; }
 

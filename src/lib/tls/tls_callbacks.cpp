@@ -23,6 +23,7 @@
 #include <botan/x509path.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/tls_messages_internal.h>
 
 #if defined(BOTAN_HAS_X25519)
    #include <botan/x25519.h>
@@ -128,6 +129,14 @@ void TLS::Callbacks::tls_verify_cert_chain(const std::vector<X509_Certificate>& 
    if(!result.successful_validation()) {
       throw TLS_Exception(Alert::BadCertificate, "Certificate validation failure: " + result.result_string());
    }
+}
+
+void TLS::Callbacks::tls_verify_raw_public_key(std::span<const uint8_t> raw_public_key_info,
+                                               Usage_Type usage,
+                                               std::string_view hostname,
+                                               const TLS::Policy& policy) {
+   const auto raw_public_key = decode_raw_public_key(raw_public_key_info);
+   tls_verify_raw_public_key(*raw_public_key, usage, hostname, policy);
 }
 
 void TLS::Callbacks::tls_verify_raw_public_key(const Public_Key& raw_public_key,

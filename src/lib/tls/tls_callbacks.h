@@ -243,17 +243,18 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * to use raw public keys MUST override this callback to verify the
        * authenticity of the received public keys.
        *
-       * Default implementation always rejects the raw public key.
+       * The default implementation decodes the key and calls the deprecated
+       * overload taking a Public_Key, which by default rejects the key.
        *
        * This function should throw an exception derived from
        * std::exception with an informative what() result if the
        * raw public key cannot be verified.
        *
-       * @param raw_public_key specifies the raw public key to be used
-       *        for peer authentication
-       * @param usage what this cert chain is being used for
-       *        Usage_Type::TLS_SERVER_AUTH for server chains,
-       *        Usage_Type::TLS_CLIENT_AUTH for client chains,
+       * @param raw_public_key_info the DER encoded SubjectPublicKeyInfo of
+       *        the raw public key, exactly as sent by the peer
+       * @param usage what this raw public key is being used for
+       *        Usage_Type::TLS_SERVER_AUTH for server keys,
+       *        Usage_Type::TLS_CLIENT_AUTH for client keys,
        * @param hostname when authenticating a server, this is the hostname
        *        the client requested (eg via SNI). When authenticating a client,
        *        this is the server name the client is authenticating *to*.
@@ -261,6 +262,26 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * @param policy the TLS policy associated with the session being authenticated
        *        using the raw public key
        */
+      virtual void tls_verify_raw_public_key(std::span<const uint8_t> raw_public_key_info,
+                                             Usage_Type usage,
+                                             std::string_view hostname,
+                                             const TLS::Policy& policy);
+
+      /**
+       * Optional callback. Default impl always rejects.
+       *
+       * This virtual function is deprecated, and will be removed in a
+       * future release. Override the overload taking the encoded
+       * SubjectPublicKeyInfo instead.
+       *
+       * @param raw_public_key specifies the raw public key to be used
+       *        for peer authentication
+       * @param usage what this raw public key is being used for
+       * @param hostname see the overload taking the SubjectPublicKeyInfo
+       * @param policy the TLS policy associated with the session being authenticated
+       *        using the raw public key
+       */
+      BOTAN_DEPRECATED("Override tls_verify_raw_public_key taking the SubjectPublicKeyInfo")
       virtual void tls_verify_raw_public_key(const Public_Key& raw_public_key,
                                              Usage_Type usage,
                                              std::string_view hostname,
