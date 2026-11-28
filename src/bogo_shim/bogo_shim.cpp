@@ -1925,7 +1925,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
             cert_chain, ocsp_responses, trusted_roots, usage, "" /* hostname */, policy);
       }
 
-      void tls_verify_raw_public_key(const Botan::Public_Key& raw_public_key,
+      void tls_verify_raw_public_key(std::span<const uint8_t> raw_public_key_info,
                                      Botan::Usage_Type /*usage*/,
                                      std::string_view /*hostname*/,
                                      const Botan::TLS::Policy& /*policy*/) override {
@@ -1939,9 +1939,8 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
 
          if(m_args.option_used("expect-peer-rpk-sha256")) {
             const auto expected = m_args.get_b64_opt("expect-peer-rpk-sha256");
-            const auto spki = raw_public_key.subject_public_key();
             auto sha256 = Botan::HashFunction::create_or_throw("SHA-256");
-            sha256->update(spki);
+            sha256->update(raw_public_key_info);
             const auto digest = sha256->final_stdvec();
             if(digest != expected) {
                throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::CertificateUnknown,

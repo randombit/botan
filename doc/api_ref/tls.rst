@@ -119,6 +119,22 @@ additional information about the connection.
      being authenticated using this certificate chain. It can be consulted
      for values such as allowable signature methods and key sizes.
 
+ .. cpp:function:: void tls_verify_raw_public_key(std::span<const uint8_t> raw_public_key_info, \
+                   Usage_Type usage, \
+                   std::string_view hostname, \
+                   const Policy& policy)
+
+     Optional - default implementation rejects all raw public keys.
+     Applications that negotiate raw public keys (RFC 7250) must override
+     this to authenticate the peer.
+
+     *raw_public_key_info* is the DER encoded SubjectPublicKeyInfo exactly as
+     sent by the peer, for example to compare against a pinned value. Throw
+     an exception if the key is not acceptable.
+
+     The overload taking a ``const Public_Key&`` is deprecated; the default
+     implementation of this function decodes the key and calls it.
+
  .. cpp:function:: std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
 
      Called by default `tls_verify_cert_chain` to set timeout for online OCSP requests
@@ -378,6 +394,12 @@ available:
       this value will ordinarily be empty, unless the server requested
       a certificate and the client responded with one.
 
+   .. cpp:function:: std::vector<uint8_t> peer_raw_public_key_info() const
+
+      Returns the DER encoded SubjectPublicKeyInfo of the counterparty's raw
+      public key (RFC 7250), or an empty vector if no raw public key was used.
+      This replaces the deprecated ``peer_raw_public_key()``.
+
    .. cpp:function:: std::optional<std::string> external_psk_identity() const
 
       When this connection was established using a user-defined Preshared Key
@@ -568,6 +590,12 @@ included that provides information about that session:
    .. cpp:function:: std::vector<X509_Certificate> peer_certs() const
 
        Returns the certificate chain of the peer
+
+   .. cpp:function:: const std::vector<uint8_t>& peer_raw_public_key_info() const
+
+       Returns the DER encoded SubjectPublicKeyInfo of the peer's raw public
+       key, or an empty vector if no raw public key was used. This replaces
+       the deprecated ``peer_raw_public_key()``.
 
    .. cpp:function:: std::optional<std::string> external_psk_identity() const
 

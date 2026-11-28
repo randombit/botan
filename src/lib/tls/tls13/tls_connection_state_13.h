@@ -10,16 +10,9 @@
 #include <botan/tls_version.h>
 #include <botan/x509cert.h>
 
-#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-
-namespace Botan {
-
-class Public_Key;
-
-}  // namespace Botan
 
 namespace Botan::TLS {
 
@@ -35,7 +28,7 @@ class Active_Connection_State_13 final {
    public:
       Active_Connection_State_13(const Internal::Handshake_State_13_Base& state,
                                  std::vector<X509_Certificate> peer_certs,
-                                 std::shared_ptr<const Public_Key> peer_raw_public_key,
+                                 std::vector<uint8_t> peer_raw_public_key_info,
                                  std::optional<std::string> psk_identity,
                                  std::string sni_hostname,
                                  bool peer_supports_psk_dhe_ke);
@@ -61,7 +54,7 @@ class Active_Connection_State_13 final {
 
       const std::optional<std::string>& psk_identity() const { return m_psk_identity; }
 
-      const std::shared_ptr<const Public_Key>& peer_raw_public_key() const { return m_peer_raw_public_key; }
+      const std::vector<uint8_t>& peer_raw_public_key_info() const { return m_peer_raw_public_key_info; }
 
       const std::string& sni_hostname() const { return m_sni_hostname; }
 
@@ -75,7 +68,7 @@ class Active_Connection_State_13 final {
       std::vector<X509_Certificate> m_peer_certs;
       std::vector<uint8_t> m_client_random;
       std::optional<std::string> m_psk_identity;
-      std::shared_ptr<const Public_Key> m_peer_raw_public_key;
+      std::vector<uint8_t> m_peer_raw_public_key_info;
       std::string m_sni_hostname;
       bool m_peer_supports_psk_dhe_ke = false;
 };

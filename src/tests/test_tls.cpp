@@ -14,8 +14,11 @@
    #include <botan/asn1_obj.h>
    #include <botan/bigint.h>
    #include <botan/der_enc.h>
+   #include <botan/hex.h>
    #include <botan/mem_ops.h>
    #include <botan/tls_alert.h>
+   #include <botan/tls_callbacks.h>
+   #include <botan/tls_exceptn.h>
    #include <botan/tls_external_psk.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_session.h>
@@ -39,12 +42,13 @@
       #include <botan/tls_psk_13.h>
    #endif
 
+   #if defined(BOTAN_HAS_TLS_13) && defined(BOTAN_HAS_ED25519)
+      #include <botan/ed25519.h>
+   #endif
+
    #if defined(BOTAN_HAS_TLS_12)
       #include <botan/credentials_manager.h>
-      #include <botan/hex.h>
-      #include <botan/tls_callbacks.h>
       #include <botan/tls_client.h>
-      #include <botan/tls_exceptn.h>
       #include <botan/tls_server.h>
       #include <botan/tls_session_manager_memory.h>
    #endif
@@ -55,6 +59,33 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_TLS)
+
+   #if defined(BOTAN_HAS_TLS_13) && defined(BOTAN_HAS_ED25519)
+class Default_RPK_Callbacks : public Botan::TLS::Callbacks {
+   public:
+      void tls_emit_data(std::span<const uint8_t> /*data*/) override {}
+
+      void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> /*data*/) override {}
+
+      void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+};
+
+// Deprecated: remove along with the Callbacks::tls_verify_raw_public_key taking a Public_Key
+class Legacy_RPK_Callbacks final : public Default_RPK_Callbacks {
+   public:
+      void tls_verify_raw_public_key(const Botan::Public_Key& raw_public_key,
+                                     Botan::Usage_Type /*usage*/,
+                                     std::string_view /*hostname*/,
+                                     const Botan::TLS::Policy& /*policy*/) override {
+         m_verified_key = raw_public_key.subject_public_key();
+      }
+
+      const std::vector<uint8_t>& verified_key() const { return m_verified_key; }
+
+   private:
+      std::vector<uint8_t> m_verified_key;
+};
+   #endif
 
 class TLS_Session_Tests final : public Test {
    public:
@@ -116,10 +147,98 @@ class TLS_Session_Tests final : public Test {
                             "Serialized TLS session contains unknown cipher suite (47789)",
                             [&] { Botan::TLS::Session{pem_with_unknown_ciphersuite}; });
 
-         return {result, decoding_validation()};
+         return {
+            result, decoding_validation(),
+   #if defined(BOTAN_HAS_TLS_13)
+               raw_public_key_storage(),
+   #endif
+         };
       }
 
    private:
+   #if defined(BOTAN_HAS_TLS_13)
+      static Botan::TLS::Session tls13_session_with_raw_public_key(std::span<const uint8_t> spki) {
+         return Botan::TLS::Session(Botan::secure_vector<uint8_t>(32, 0x42),
+                                    std::nullopt,
+                                    0,
+                                    std::chrono::seconds(3600),
+                                    Botan::TLS::Protocol_Version::TLS_V13,
+                                    0x1301,
+                                    Botan::TLS::Connection_Side::Client,
+                                    {},
+                                    spki,
+                                    Botan::TLS::Server_Information("server"),
+                                    0,
+                                    std::chrono::system_clock::now());
+      }
+
+      static Test::Result raw_public_key_storage() {
+         Test::Result result("TLS::Session raw public key");
+
+         // SubjectPublicKeyInfo of an unassigned algorithm (OID 1.2.3.4)
+         const auto unknown_spki = Botan::hex_decode("300E300506032A030403050001020304");
+
+         const Botan::TLS::Session session(tls13_session_with_raw_public_key(unknown_spki).DER_encode());
+         result.test_bin_eq("SPKI survives serialization", session.peer_raw_public_key_info(), unknown_spki);
+         result.test_is_true("credential type is RawPublicKey",
+                             session.peer_credential_type() == Botan::TLS::Certificate_Type::RawPublicKey);
+
+         const auto no_rpk = tls13_session_with_raw_public_key({});
+         result.test_is_true("no raw public key", no_rpk.peer_raw_public_key_info().empty());
+         result.test_is_true("no credential type", !no_rpk.peer_credential_type().has_value());
+
+         // Deprecated: remove along with Session_Base::peer_raw_public_key
+         result.test_throws<Botan::Decoding_Error>("key is only decoded on request",
+                                                   [&] { session.peer_raw_public_key(); });
+         result.test_is_true("no raw public key to decode", no_rpk.peer_raw_public_key() == nullptr);
+
+      #if defined(BOTAN_HAS_ED25519)
+         // RFC 8410 10.1
+         const auto ed25519_spki = Botan::hex_decode(
+            "302A300506032B657003210019BF44096984CDFE8541BAC167DC3B96C85086AA30B6B6CB0C5C38AD703166E1");
+
+         // Deprecated: remove along with Session_Base::peer_raw_public_key
+         const Botan::TLS::Session ed25519_session(tls13_session_with_raw_public_key(ed25519_spki).DER_encode());
+         const auto key = ed25519_session.peer_raw_public_key();
+         if(result.test_not_null("Ed25519 key is decoded", key)) {
+            result.test_str_eq("decoded algorithm", key->algo_name(), "Ed25519");
+            result.test_bin_eq("decoded key", key->subject_public_key(), ed25519_spki);
+         }
+
+         // Deprecated: remove along with the Session constructors taking a Public_Key
+         const auto ed25519_key = std::make_shared<Botan::Ed25519_PublicKey>(std::span{ed25519_spki}.last(32));
+         const Botan::TLS::Session from_key(Botan::secure_vector<uint8_t>(32, 0x42),
+                                            std::nullopt,
+                                            0,
+                                            std::chrono::seconds(3600),
+                                            Botan::TLS::Protocol_Version::TLS_V13,
+                                            0x1301,
+                                            Botan::TLS::Connection_Side::Client,
+                                            {},
+                                            ed25519_key,
+                                            Botan::TLS::Server_Information("server"),
+                                            std::chrono::system_clock::now());
+         result.test_bin_eq("Public_Key is stored as its SPKI", from_key.peer_raw_public_key_info(), ed25519_spki);
+
+         // Deprecated: remove along with the Callbacks::tls_verify_raw_public_key taking a Public_Key
+         const Botan::TLS::Policy policy;
+         Default_RPK_Callbacks default_callbacks;
+         result.test_throws<Botan::TLS::TLS_Exception>("raw public keys are rejected by default", [&] {
+            default_callbacks.tls_verify_raw_public_key(
+               ed25519_spki, Botan::Usage_Type::TLS_SERVER_AUTH, "server", policy);
+         });
+
+         Legacy_RPK_Callbacks legacy_callbacks;
+         Botan::TLS::Callbacks& callbacks = legacy_callbacks;
+         callbacks.tls_verify_raw_public_key(ed25519_spki, Botan::Usage_Type::TLS_SERVER_AUTH, "server", policy);
+         result.test_bin_eq(
+            "SPKI is decoded for the Public_Key callback", legacy_callbacks.verified_key(), ed25519_spki);
+      #endif
+
+         return result;
+      }
+   #endif
+
       struct Encoded_Session_Fields {
             uint64_t start_time = 1700000000;
             size_t major_version = 3;

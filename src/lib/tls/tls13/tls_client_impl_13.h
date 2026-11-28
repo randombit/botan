@@ -79,9 +79,9 @@ class Client_Impl_13 final : public Channel_Impl_13 {
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
       /**
-      * @return raw public key of the peer (may be nullptr)
+      * @return DER encoded SubjectPublicKeyInfo of the peer's raw public key (may be empty)
       */
-      std::shared_ptr<const Public_Key> peer_raw_public_key() const override;
+      std::vector<uint8_t> peer_raw_public_key_info() const override;
 
       /**
        * @return identity of the PSK used for this connection

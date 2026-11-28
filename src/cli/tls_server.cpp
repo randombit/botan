@@ -29,6 +29,7 @@
 
    #include <botan/hex.h>
    #include <botan/mem_ops.h>
+   #include <botan/pk_keys.h>
    #include <botan/rng.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_exceptn.h>
@@ -105,11 +106,11 @@ class Callbacks : public Botan::TLS::Callbacks {
       // Binds the DTLS cookie to the client's address
       std::string tls_peer_network_identity() override { return peer_identity(); }
 
-      void tls_verify_raw_public_key(const Botan::Public_Key& raw_public_key,
+      void tls_verify_raw_public_key(std::span<const uint8_t> raw_public_key_info,
                                      Botan::Usage_Type /* usage */,
                                      std::string_view /* hostname */,
                                      const Botan::TLS::Policy& /* policy */) override {
-         const auto fingerprint = raw_public_key.fingerprint_public("SHA-256");
+         const auto fingerprint = Botan::create_hex_fingerprint(raw_public_key_info, "SHA-256");
          const bool trusted = (fingerprint == trusted_client_pubkey_sha256());
          output() << "received Raw Public Key (" << fingerprint << ") which is "
                   << (trusted ? "trusted" : "NOT trusted") << "\n";

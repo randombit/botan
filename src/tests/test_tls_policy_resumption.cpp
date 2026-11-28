@@ -48,6 +48,7 @@ class Pipe_Callbacks final : public Botan::TLS::Callbacks {
       void tls_session_established(const Botan::TLS::Session_Summary& session) override {
          m_was_resumption = session.was_resumption();
          m_peer_certificates = session.peer_certs().size();
+         m_peer_raw_public_key_info = session.peer_raw_public_key_info();
          m_kex = session.ciphersuite().kex_method();
          m_cipher = session.ciphersuite().cipher_algo();
       }
@@ -61,7 +62,7 @@ class Pipe_Callbacks final : public Botan::TLS::Callbacks {
                                  std::string_view /*hostname*/,
                                  const Botan::TLS::Policy& /*policy*/) override {}
 
-      void tls_verify_raw_public_key(const Botan::Public_Key& /*raw_public_key*/,
+      void tls_verify_raw_public_key(std::span<const uint8_t> /*raw_public_key_info*/,
                                      Botan::Usage_Type /*usage*/,
                                      std::string_view /*hostname*/,
                                      const Botan::TLS::Policy& /*policy*/) override {}
@@ -72,6 +73,8 @@ class Pipe_Callbacks final : public Botan::TLS::Callbacks {
 
       size_t peer_certificates() const { return m_peer_certificates; }
 
+      const std::vector<uint8_t>& peer_raw_public_key_info() const { return m_peer_raw_public_key_info; }
+
       std::optional<Botan::TLS::Kex_Algo> kex() const { return m_kex; }
 
       const std::string& cipher() const { return m_cipher; }
@@ -80,6 +83,7 @@ class Pipe_Callbacks final : public Botan::TLS::Callbacks {
       std::vector<uint8_t> m_outbound;
       bool m_was_resumption = false;
       size_t m_peer_certificates = 0;
+      std::vector<uint8_t> m_peer_raw_public_key_info;
       std::optional<Botan::TLS::Kex_Algo> m_kex;
       std::string m_cipher;
 };
@@ -171,6 +175,9 @@ struct Connection_Result final {
       bool server_active = false;
       bool server_saw_resumption = false;
       size_t server_peer_certificates = 0;
+      std::vector<uint8_t> server_summary_raw_public_key_info;
+      std::vector<uint8_t> server_channel_raw_public_key_info;
+      std::vector<uint8_t> server_channel_raw_public_key;
       std::optional<Botan::TLS::Kex_Algo> kex;
       std::string cipher;
       std::optional<Botan::TLS::AlertType> alert;
@@ -205,9 +212,15 @@ Connection_Result connect(Botan::TLS::Protocol_Version version,
       alert = e.type();
    }
 
+   // Deprecated: remove along with Channel::peer_raw_public_key
+   const auto server_rpk = server.peer_raw_public_key();
+
    return {server.is_active(),
            server_callbacks->was_resumption(),
            server_callbacks->peer_certificates(),
+           server_callbacks->peer_raw_public_key_info(),
+           server.peer_raw_public_key_info(),
+           server_rpk ? server_rpk->subject_public_key() : std::vector<uint8_t>{},
            server_callbacks->kex(),
            server_callbacks->cipher(),
            alert};
@@ -605,6 +618,13 @@ class TLS13_Client_Auth_Resumption_Tests final : public Test {
                                           rng);
          result.test_is_true("client connects with raw public key authentication", rpk_initial.server_active);
 
+         const auto rpk_spki = rpk_key->subject_public_key();
+         result.test_bin_eq(
+            "session summary carries the raw public key", rpk_initial.server_summary_raw_public_key_info, rpk_spki);
+         result.test_bin_eq(
+            "server reports the raw public key", rpk_initial.server_channel_raw_public_key_info, rpk_spki);
+         result.test_bin_eq("server decodes the raw public key", rpk_initial.server_channel_raw_public_key, rpk_spki);
+
          const auto rpk_resumed = connect(version,
                                           rpk_client_sessions,
                                           server_sessions,
@@ -616,6 +636,13 @@ class TLS13_Client_Auth_Resumption_Tests final : public Test {
          result.test_is_true("raw public key session resumes while the credential type is accepted",
                              rpk_resumed.server_active);
          result.test_is_true("raw public key resumption is reported as resumed", rpk_resumed.server_saw_resumption);
+         result.test_bin_eq("resumed session summary carries the raw public key",
+                            rpk_resumed.server_summary_raw_public_key_info,
+                            rpk_spki);
+         result.test_bin_eq(
+            "server reports the resumed raw public key", rpk_resumed.server_channel_raw_public_key_info, rpk_spki);
+         result.test_bin_eq(
+            "server decodes the resumed raw public key", rpk_resumed.server_channel_raw_public_key, rpk_spki);
 
          auto rpk_x509_client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng, 16);
          const auto rpk_mint = connect(version,

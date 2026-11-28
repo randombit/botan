@@ -168,8 +168,19 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
 
       /**
       * @return raw public key of the peer (may be nullptr)
+      *
+      * The key is decoded from peer_raw_public_key_info() on each call.
+      *
+      * TODO(Botan4) remove this
       */
+      BOTAN_DEPRECATED("Use peer_raw_public_key_info")
       virtual std::shared_ptr<const Public_Key> peer_raw_public_key() const = 0;
+
+      /**
+      * @return DER encoded SubjectPublicKeyInfo of the peer's raw public
+      *         key, as sent by the peer (may be empty)
+      */
+      virtual std::vector<uint8_t> peer_raw_public_key_info() const = 0;
 
       /**
        * @return identity of the PSK used for this connection

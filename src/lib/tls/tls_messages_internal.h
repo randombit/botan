@@ -18,6 +18,7 @@
 #include <vector>
 
 namespace Botan {
+class Public_Key;
 class RandomNumberGenerator;
 
 namespace TLS {
@@ -88,6 +89,11 @@ bool group_may_be_ecc(Group_Params group);
 std::vector<uint8_t> calculate_cookie(std::span<const uint8_t> client_hello_bits,
                                       std::string_view client_identity,
                                       std::span<const uint8_t> cookie_secret);
+
+/**
+ * Decode the DER encoded SubjectPublicKeyInfo of a raw public key (RFC 7250)
+ */
+std::unique_ptr<Public_Key> decode_raw_public_key(std::span<const uint8_t> spki);
 
 /**
  * Parse a "status_request" extension. In a ClientHello, a request for any

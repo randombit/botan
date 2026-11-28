@@ -13,14 +13,15 @@
 #include <botan/der_enc.h>
 #include <botan/mac.h>
 #include <botan/pem.h>
+#include <botan/pk_algs.h>
 #include <botan/rng.h>
 #include <botan/tls_callbacks.h>
-#include <botan/x509_key.h>
 #include <botan/x509cert.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/tls_messages_internal.h>
 
 #if defined(BOTAN_HAS_TLS_13)
    #include <botan/tls_extensions_13.h>
@@ -89,6 +90,27 @@ std::optional<Session_Ticket> Session_Handle::ticket() const {
    return std::nullopt;
 }
 
+// RFC 7250 3.
+//    The SubjectPublicKeyInfo value in the Certificate payload MUST
+//    contain the DER encoding [X.690] of the SubjectPublicKeyInfo.
+std::unique_ptr<Public_Key> decode_raw_public_key(std::span<const uint8_t> spki) {
+   AlgorithmIdentifier alg_id;
+   std::vector<uint8_t> key_bits;
+
+   BER_Decoder(spki, BER_Decoder::Limits::DER())
+      .start_sequence()
+      .decode(alg_id)
+      .decode_octet_aligned_bitstring(key_bits)
+      .end_cons()
+      .verify_end();
+
+   if(key_bits.empty()) {
+      throw Decoding_Error("Empty raw public key");
+   }
+
+   return load_public_key(alg_id, key_bits);
+}
+
 Session_Base::Session_Base() = default;
 
 Session_Base::~Session_Base() = default;
@@ -107,7 +129,28 @@ Session_Base::Session_Base(std::chrono::system_clock::time_point start_time,
                            bool extended_master_secret,
                            bool encrypt_then_mac,
                            const std::vector<X509_Certificate>& peer_certs,
-                           std::shared_ptr<const Public_Key> peer_raw_public_key,
+                           std::shared_ptr<const Public_Key> peer_raw_public_key,  // NOLINT(*-unnecessary-value-param)
+                           Server_Information server_info) :
+      Session_Base(start_time,
+                   version,
+                   ciphersuite,
+                   connection_side,
+                   srtp_profile,
+                   extended_master_secret,
+                   encrypt_then_mac,
+                   peer_certs,
+                   peer_raw_public_key ? peer_raw_public_key->subject_public_key() : std::vector<uint8_t>{},
+                   std::move(server_info)) {}
+
+Session_Base::Session_Base(std::chrono::system_clock::time_point start_time,
+                           Protocol_Version version,
+                           uint16_t ciphersuite,
+                           Connection_Side connection_side,
+                           uint16_t srtp_profile,
+                           bool extended_master_secret,
+                           bool encrypt_then_mac,
+                           const std::vector<X509_Certificate>& peer_certs,
+                           std::span<const uint8_t> peer_raw_public_key_info,
                            Server_Information server_info) :
       m_start_time(start_time),
       m_version(version),
@@ -117,8 +160,15 @@ Session_Base::Session_Base(std::chrono::system_clock::time_point start_time,
       m_extended_master_secret(extended_master_secret),
       m_encrypt_then_mac(encrypt_then_mac),
       m_peer_certs(peer_certs),
-      m_peer_raw_public_key(std::move(peer_raw_public_key)),
+      m_peer_raw_public_key_info(peer_raw_public_key_info.begin(), peer_raw_public_key_info.end()),
       m_server_info(std::move(server_info)) {}
+
+std::shared_ptr<const Public_Key> Session_Base::peer_raw_public_key() const {
+   if(m_peer_raw_public_key_info.empty()) {
+      return nullptr;
+   }
+   return decode_raw_public_key(m_peer_raw_public_key_info);
+}
 
 Ciphersuite Session_Base::ciphersuite() const {
    auto suite = Ciphersuite::by_id(m_ciphersuite);
@@ -180,7 +230,7 @@ std::string tls13_kex_to_string(bool psk, std::optional<Named_Group> group) {
 Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
                                  Connection_Side side,
                                  const std::vector<X509_Certificate>& peer_certs,
-                                 std::shared_ptr<const Public_Key> peer_raw_public_key,
+                                 std::span<const uint8_t> peer_raw_public_key_info,
                                  std::optional<std::string> psk_identity,
                                  bool session_was_resumed,
                                  Server_Information server_info,
@@ -202,7 +252,7 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
                    // TLS 1.3 uses AEADs, so technically encrypt-then-MAC is not applicable.
                    false,
                    peer_certs,
-                   std::move(peer_raw_public_key),
+                   peer_raw_public_key_info,
                    std::move(server_info)),
       m_external_psk_identity(std::move(psk_identity)),
       m_was_resumption(session_was_resumed) {
@@ -254,7 +304,7 @@ Session::Session(const secure_vector<uint8_t>& master_secret,
                    extended_master_secret,
                    encrypt_then_mac,
                    certs,
-                   nullptr,  // RFC 7250 (raw public keys) is NYI for TLS 1.2
+                   std::span<const uint8_t>(),  // RFC 7250 (raw public keys) is NYI for TLS 1.2
                    server_info),
       m_master_secret(master_secret),
       m_early_data_allowed(false),
@@ -297,7 +347,32 @@ Session::Session(const secure_vector<uint8_t>& session_psk,
                  uint16_t ciphersuite,
                  Connection_Side side,
                  const std::vector<X509_Certificate>& peer_certs,
-                 std::shared_ptr<const Public_Key> peer_raw_public_key,
+                 std::shared_ptr<const Public_Key> peer_raw_public_key,  // NOLINT(*-unnecessary-value-param)
+                 const Server_Information& server_info,
+                 uint16_t srtp_profile,
+                 std::chrono::system_clock::time_point current_timestamp) :
+      Session(session_psk,
+              max_early_data_bytes,
+              ticket_age_add,
+              lifetime_hint,
+              version,
+              ciphersuite,
+              side,
+              peer_certs,
+              peer_raw_public_key ? peer_raw_public_key->subject_public_key() : std::vector<uint8_t>{},
+              server_info,
+              srtp_profile,
+              current_timestamp) {}
+
+Session::Session(const secure_vector<uint8_t>& session_psk,
+                 const std::optional<uint32_t>& max_early_data_bytes,
+                 uint32_t ticket_age_add,
+                 std::chrono::seconds lifetime_hint,
+                 Protocol_Version version,
+                 uint16_t ciphersuite,
+                 Connection_Side side,
+                 const std::vector<X509_Certificate>& peer_certs,
+                 std::span<const uint8_t> peer_raw_public_key_info,
                  const Server_Information& server_info,
                  uint16_t srtp_profile,
                  std::chrono::system_clock::time_point current_timestamp) :
@@ -317,7 +392,7 @@ Session::Session(const secure_vector<uint8_t>& session_psk,
                    // TLS 1.3 uses AEADs, so technically encrypt-then-MAC is not applicable.
                    false,
                    peer_certs,
-                   std::move(peer_raw_public_key),
+                   peer_raw_public_key_info,
                    server_info),
       m_master_secret(session_psk),
       m_early_data_allowed(max_early_data_bytes.has_value()),
@@ -333,8 +408,6 @@ Session::Session(std::string_view pem) : Session(PEM_Code::decode_check_label(pe
 
 Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ {
    uint8_t side_code = 0;
-
-   std::vector<uint8_t> raw_pubkey_or_empty;
 
    ASN1_String server_hostname;
    ASN1_String server_service;
@@ -360,7 +433,7 @@ Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ 
       .decode(m_encrypt_then_mac)
       .decode(m_master_secret, ASN1_Type::OctetString)
       .decode_list<X509_Certificate>(m_peer_certs)
-      .decode(raw_pubkey_or_empty, ASN1_Type::OctetString)
+      .decode(m_peer_raw_public_key_info, ASN1_Type::OctetString)
       .decode(server_hostname)
       .decode(server_service)
       .decode_integer_type(server_port)
@@ -411,10 +484,6 @@ Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ 
 
    m_server_info = Server_Information(server_hostname.value(), server_service.value(), server_port);
 
-   if(!raw_pubkey_or_empty.empty()) {
-      m_peer_raw_public_key = X509::load_key(raw_pubkey_or_empty);
-   }
-
    // RFC 9846 4.7.1
    //    Servers MUST NOT use any value greater than 604800 seconds (7 days).
    //
@@ -428,9 +497,6 @@ Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ 
 }
 
 secure_vector<uint8_t> Session::DER_encode() const {
-   const auto raw_pubkey_or_empty =
-      m_peer_raw_public_key ? m_peer_raw_public_key->subject_public_key() : std::vector<uint8_t>{};
-
    return DER_Encoder()
       .start_sequence()
       .encode(TLS_SESSION_PARAM_STRUCT_VERSION)
@@ -445,7 +511,7 @@ secure_vector<uint8_t> Session::DER_encode() const {
       .start_sequence()
       .encode_list(m_peer_certs)
       .end_cons()
-      .encode(raw_pubkey_or_empty, ASN1_Type::OctetString)
+      .encode(m_peer_raw_public_key_info, ASN1_Type::OctetString)
       .encode(ASN1_String(m_server_info.hostname(), ASN1_Type::Utf8String))
       .encode(ASN1_String(m_server_info.service(), ASN1_Type::Utf8String))
       .encode(static_cast<size_t>(m_server_info.port()))

@@ -774,7 +774,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
       m_handshake->state.server_hello(),
       Connection_Side::Client,
       peer_cert_chain(),
-      peer_raw_public_key(),
+      peer_raw_public_key_info(),
       external_psk_identity(),
       m_handshake->resumed_session.has_value(),
       m_info,
@@ -839,20 +839,9 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
          return {};
       };
 
-      const auto extract_raw_pk = [&]() -> std::shared_ptr<const Public_Key> {
-         if(m_handshake->state.has_server_certificate_msg() &&
-            m_handshake->state.server_certificate().is_raw_public_key()) {
-            return m_handshake->state.server_certificate().public_key();
-         }
-         if(m_handshake->resumed_session.has_value()) {
-            return m_handshake->resumed_session->session.peer_raw_public_key();
-         }
-         return nullptr;
-      };
-
       m_active_state = Active_Connection_State_13(m_handshake->state,
                                                   extract_certs(),
-                                                  extract_raw_pk(),
+                                                  peer_raw_public_key_info(),
                                                   m_handshake->psk_identity,
                                                   m_info.hostname(),
                                                   false /* peer_supports_psk_dhe_ke - client doesn't need this */);
@@ -888,7 +877,7 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
                          m_active_state->ciphersuite_code(),
                          Connection_Side::Client,
                          peer_cert_chain(),
-                         peer_raw_public_key(),
+                         peer_raw_public_key_info(),
                          m_info,
                          m_active_state->srtp_profile(),
                          callbacks().tls_current_timestamp());
@@ -918,24 +907,24 @@ std::vector<X509_Certificate> Client_Impl_13::peer_cert_chain() const {
    return {};
 }
 
-std::shared_ptr<const Public_Key> Client_Impl_13::peer_raw_public_key() const {
+std::vector<uint8_t> Client_Impl_13::peer_raw_public_key_info() const {
    if(m_active_state.has_value()) {
-      return m_active_state->peer_raw_public_key();
+      return m_active_state->peer_raw_public_key_info();
    }
 
    // During handshake, before m_active_state is populated
    if(m_handshake) {
       if(m_handshake->state.has_server_certificate_msg() &&
          m_handshake->state.server_certificate().is_raw_public_key()) {
-         return m_handshake->state.server_certificate().public_key();
+         return m_handshake->state.server_certificate().raw_public_key_info();
       }
 
       if(m_handshake->resumed_session.has_value()) {
-         return m_handshake->resumed_session->session.peer_raw_public_key();
+         return m_handshake->resumed_session->session.peer_raw_public_key_info();
       }
    }
 
-   return nullptr;
+   return {};
 }
 
 std::optional<std::string> Client_Impl_13::external_psk_identity() const {

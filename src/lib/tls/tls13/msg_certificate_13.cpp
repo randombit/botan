@@ -9,18 +9,18 @@
 
 #include <botan/tls_messages_13.h>
 
-#include <botan/ber_dec.h>
 #include <botan/credentials_manager.h>
 #include <botan/ocsp.h>
-#include <botan/pk_algs.h>
+#include <botan/pk_keys.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_extensions_13.h>
 #include <botan/tls_policy.h>
-#include <botan/x509_key.h>
+#include <botan/x509cert.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/tls_messages_internal.h>
 #include <botan/internal/tls_reader.h>
 #include <algorithm>
 #include <iterator>
@@ -41,27 +41,6 @@ bool certificate_allows_signing(const X509_Certificate& cert) {
    }
 
    return constraints.includes(Key_Constraints::DigitalSignature);
-}
-
-// RFC 7250 3.
-//    The SubjectPublicKeyInfo value in the Certificate payload MUST
-//    contain the DER encoding [X.690] of the SubjectPublicKeyInfo.
-std::unique_ptr<Public_Key> decode_raw_public_key(std::span<const uint8_t> spki) {
-   AlgorithmIdentifier alg_id;
-   std::vector<uint8_t> key_bits;
-
-   BER_Decoder(spki, BER_Decoder::Limits::DER())
-      .start_sequence()
-      .decode(alg_id)
-      .decode_octet_aligned_bitstring(key_bits)
-      .end_cons()
-      .verify_end();
-
-   if(key_bits.empty()) {
-      throw Decoding_Error("Empty raw public key");
-   }
-
-   return load_public_key(alg_id, key_bits);
 }
 
 }  // namespace
@@ -108,6 +87,11 @@ const X509_Certificate& Certificate_13::leaf() const {
    return m_entries.front().certificate();
 }
 
+const std::vector<uint8_t>& Certificate_13::raw_public_key_info() const {
+   BOTAN_STATE_CHECK(is_raw_public_key());
+   return m_entries.front().raw_public_key_info();
+}
+
 void Certificate_13::verify(Callbacks& callbacks,
                             const Policy& policy,
                             Credentials_Manager& creds,
@@ -126,7 +110,7 @@ void Certificate_13::verify(Callbacks& callbacks,
    }
 
    if(is_raw_public_key()) {
-      callbacks.tls_verify_raw_public_key(*public_key(), usage, hostname, policy);
+      callbacks.tls_verify_raw_public_key(raw_public_key_info(), usage, hostname, policy);
    } else {
       verify_certificate_chain(callbacks, policy, creds, hostname, use_ocsp, usage);
    }
@@ -343,7 +327,8 @@ Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
       //    available encoding used in a PKIX certificate in the form of a
       //    SubjectPublicKeyInfo structure is reused.
       try {
-         m_raw_public_key = decode_raw_public_key(reader.get_tls_length_value(3));
+         m_raw_public_key_info = reader.get_tls_length_value(3);
+         m_raw_public_key = decode_raw_public_key(m_raw_public_key_info);
       } catch(Exception& e) {
          throw TLS_Exception(Alert::DecodeError, e.what());
       }
@@ -395,6 +380,7 @@ Certificate_13::Certificate_Entry::Certificate_Entry(const X509_Certificate& cer
 Certificate_13::Certificate_Entry::Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key) :
       m_raw_public_key(std::move(raw_public_key)) {
    BOTAN_ASSERT_NONNULL(m_raw_public_key);
+   m_raw_public_key_info = m_raw_public_key->subject_public_key();
 }
 
 const X509_Certificate& Certificate_13::Certificate_Entry::certificate() const {
@@ -410,8 +396,13 @@ std::shared_ptr<const Public_Key> Certificate_13::Certificate_Entry::public_key(
    return m_certificate->subject_public_key();
 }
 
+const std::vector<uint8_t>& Certificate_13::Certificate_Entry::raw_public_key_info() const {
+   BOTAN_STATE_CHECK(!has_certificate());
+   return m_raw_public_key_info;
+}
+
 std::vector<uint8_t> Certificate_13::Certificate_Entry::serialize() const {
-   return (has_certificate()) ? m_certificate->BER_encode() : X509::BER_encode(*m_raw_public_key);
+   return (has_certificate()) ? m_certificate->BER_encode() : m_raw_public_key_info;
 }
 
 /**

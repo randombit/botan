@@ -108,9 +108,9 @@ class Channel_Impl_12 : public Channel_Impl {
       * Note: Raw public key for authentication (RFC7250) is currently not
       *       implemented for TLS 1.2.
       *
-      * @return raw public key of the peer (will be nullptr)
+      * @return raw public key of the peer (will be empty)
       */
-      std::shared_ptr<const Public_Key> peer_raw_public_key() const override { return nullptr; }
+      std::vector<uint8_t> peer_raw_public_key_info() const override { return {}; }
 
       std::optional<std::string> external_psk_identity() const override;
 

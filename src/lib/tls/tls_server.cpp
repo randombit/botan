@@ -10,9 +10,11 @@
 
 #include <botan/tls_server.h>
 
+#include <botan/pk_keys.h>
 #include <botan/tls_policy.h>
 #include <botan/x509cert.h>
 #include <botan/internal/tls_channel_impl.h>
+#include <botan/internal/tls_messages_internal.h>
 
 #if defined(BOTAN_HAS_TLS_12)
    #include <botan/internal/tls_server_impl_12.h>
@@ -113,7 +115,15 @@ std::vector<X509_Certificate> Server::peer_cert_chain() const {
 }
 
 std::shared_ptr<const Public_Key> Server::peer_raw_public_key() const {
-   return m_impl->peer_raw_public_key();
+   const auto spki = m_impl->peer_raw_public_key_info();
+   if(spki.empty()) {
+      return nullptr;
+   }
+   return decode_raw_public_key(spki);
+}
+
+std::vector<uint8_t> Server::peer_raw_public_key_info() const {
+   return m_impl->peer_raw_public_key_info();
 }
 
 std::optional<std::string> Server::external_psk_identity() const {

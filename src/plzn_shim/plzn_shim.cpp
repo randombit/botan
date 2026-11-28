@@ -874,7 +874,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          Botan::TLS::Callbacks::tls_verify_cert_chain(cert_chain, ocsp, trusted_roots, usage, hostname, policy);
       }
 
-      void tls_verify_raw_public_key(const Botan::Public_Key& /*raw_public_key*/,
+      void tls_verify_raw_public_key(std::span<const uint8_t> /*raw_public_key_info*/,
                                      Botan::Usage_Type /*usage*/,
                                      std::string_view /*hostname*/,
                                      const Botan::TLS::Policy& /*policy*/) override {

@@ -73,6 +73,14 @@ in a future major release:
   ``TLS::Channel::timeout_check()`` as well as
   ``TLS::Channel::next_retransmission_timeout()``.
 
+- Interfaces passing a raw public key (RFC 7250) as a ``Public_Key``:
+  ``TLS::Callbacks::tls_verify_raw_public_key()`` taking a ``Public_Key``,
+  ``TLS::Channel::peer_raw_public_key()``,
+  ``TLS::Session_Base::peer_raw_public_key()``, and the ``TLS::Session_Base``
+  and TLS 1.3 ``TLS::Session`` constructors taking a ``Public_Key``. Use the
+  variants taking or returning the encoded SubjectPublicKeyInfo instead. Note
+  that compilers do not warn when overriding the deprecated callback.
+
 Elliptic Curve Deprecations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
