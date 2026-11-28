@@ -9,8 +9,10 @@ name -> "PBES2"
 <requires>
 asn1
 cbc
+hkdf
 hmac
 pbkdf2
+sha2_32
 </requires>
 
 <header:internal>
