@@ -288,21 +288,68 @@ class Base64_Tests final : public Text_Based_Test {
          return std::all_of(head.begin(), head.end(), is_canary) && std::all_of(tail.begin(), tail.end(), is_canary);
       }
 
+      struct Decoded {
+            std::vector<uint8_t> output;
+            size_t consumed;
+      };
+
+      /**
+       * Decode by feeding the streaming decoder inputs too short for the SIMD
+       * bulk paths, carrying over whatever it did not consume
+       *
+       * @return the output and the number of input characters consumed, or
+       *         nullopt if the input was rejected
+       */
+      static std::optional<Decoded> reference_decode(Test::Result& result,
+                                                     std::string_view input,
+                                                     bool final_inputs,
+                                                     bool ignore_ws) {
+         constexpr size_t chunk_size = 32;
+
+         Decoded decoded{{}, 0};
+         std::string pending;
+         size_t pos = 0;
+
+         try {
+            while(true) {
+               const size_t take = std::min(chunk_size, input.size() - pos);
+               pending.append(input.substr(pos, take));
+               pos += take;
+               const bool last = (pos == input.size());
+
+               if(pending.size() >= 128) {
+                  result.test_failure("reference base64 decoder input is long enough to use SIMD");
+               }
+
+               std::vector<uint8_t> buf(Botan::base64_decode_max_output(pending.size()));
+               size_t consumed = 0;
+               const size_t written = Botan::base64_decode(
+                  buf.data(), pending.data(), pending.size(), consumed, last && final_inputs, ignore_ws);
+
+               decoded.output.insert(decoded.output.end(), buf.begin(), buf.begin() + written);
+               decoded.consumed += consumed;
+               pending.erase(0, consumed);
+
+               if(last) {
+                  return decoded;
+               }
+            }
+         } catch(Botan::Invalid_Argument&) {
+            return std::nullopt;
+         }
+      }
+
       static void check_decode_bounds(Test::Result& result, std::string_view input, bool ignore_ws) {
          // An exact size allocation lets sanitizers see any read past the end
          const std::vector<char> in(input.begin(), input.end());
          const size_t max_output = Botan::base64_decode_max_output(in.size());
 
-         // The streaming decoder never uses the SIMD bulk paths
-         std::vector<uint8_t> ref(max_output);
-         std::optional<size_t> ref_len;
-         try {
-            size_t consumed = 0;
-            const size_t written = Botan::base64_decode(ref.data(), in.data(), in.size(), consumed, true, ignore_ws);
-            if(consumed == in.size()) {
-               ref_len = written;
-            }
-         } catch(Botan::Invalid_Argument&) {}
+         const std::string what = "base64 decoding " + std::to_string(in.size()) + " chars";
+
+         auto ref = reference_decode(result, input, true, ignore_ws);
+         if(ref.has_value() && ref->consumed != in.size()) {
+            ref.reset();
+         }
 
          std::vector<uint8_t> buf(CanaryLen + max_output + CanaryLen, Canary);
          const auto out = std::span{buf}.subspan(CanaryLen, max_output);
@@ -311,18 +358,42 @@ class Base64_Tests final : public Text_Based_Test {
             out_len = Botan::base64_decode(out.data(), in.data(), in.size(), ignore_ws);
          } catch(Botan::Invalid_Argument&) {}
 
-         const std::string what = "base64 decoding " + std::to_string(in.size()) + " chars";
-
          if(!canaries_intact(buf)) {
             result.test_failure(what + " wrote outside of the output buffer");
-         } else if(out_len.has_value() != ref_len.has_value()) {
-            result.test_failure(what + " disagrees with the streaming decoder on validity");
+         } else if(out_len.has_value() != ref.has_value()) {
+            result.test_failure(what + " disagrees with the reference decoder on validity");
          } else if(out_len.has_value()) {
-            if(result.test_sz_eq(what + " length", *out_len, *ref_len)) {
-               result.test_bin_eq(what, out.first(*out_len), std::span{ref}.first(*ref_len));
+            if(result.test_sz_eq(what + " length", *out_len, ref->output.size())) {
+               result.test_bin_eq(what, out.first(*out_len), ref->output);
             }
          } else {
             result.test_success();
+         }
+
+         // A single call to the streaming decoder, with and without the end of the input
+         for(const bool final_inputs : {true, false}) {
+            const auto stream_ref = reference_decode(result, input, final_inputs, ignore_ws);
+            const std::string stream_what = what + (final_inputs ? " (streaming, final)" : " (streaming)");
+
+            std::fill(buf.begin(), buf.end(), Canary);
+            std::optional<Decoded> stream;
+            try {
+               size_t consumed = 0;
+               const size_t written =
+                  Botan::base64_decode(out.data(), in.data(), in.size(), consumed, final_inputs, ignore_ws);
+               stream = Decoded{std::vector<uint8_t>(out.begin(), out.begin() + written), consumed};
+            } catch(Botan::Invalid_Argument&) {}
+
+            if(!canaries_intact(buf)) {
+               result.test_failure(stream_what + " wrote outside of the output buffer");
+            } else if(stream.has_value() != stream_ref.has_value()) {
+               result.test_failure(stream_what + " disagrees with the reference decoder on validity");
+            } else if(stream.has_value()) {
+               result.test_sz_eq(stream_what + " consumed", stream->consumed, stream_ref->consumed);
+               result.test_bin_eq(stream_what, stream->output, stream_ref->output);
+            } else {
+               result.test_success();
+            }
          }
       }
 
@@ -381,7 +452,14 @@ class Base64_Tests final : public Text_Based_Test {
                      wrapped += '\n';
                   }
 
-                  for(const auto& input : {padded, wrapped, " " + padded}) {
+                  // Windows line endings, so that whitespace comes in runs
+                  std::string wrapped_crlf;
+                  for(size_t i = 0; i < padded.size(); i += 64) {
+                     wrapped_crlf += padded.substr(i, 64);
+                     wrapped_crlf += "\r\n";
+                  }
+
+                  for(const auto& input : {padded, wrapped, wrapped_crlf, " " + padded}) {
                      for(const bool ignore_ws : {true, false}) {
                         check_decode_bounds(result, input, ignore_ws);
                      }

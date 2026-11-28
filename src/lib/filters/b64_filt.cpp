@@ -14,14 +14,26 @@
 
 namespace Botan {
 
+namespace {
+
+/*
+* Large enough that most of the input goes through the SIMD codecs. The
+* encoder input must be a multiple of 3 bytes, so that only the final call
+* has a partial block.
+*/
+constexpr size_t Base64_Encoder_Input_Size = 3 * DefaultBufferSize;
+constexpr size_t Base64_Decoder_Input_Size = 4 * DefaultBufferSize;
+
+}  // namespace
+
 /*
 * Base64_Encoder Constructor
 */
 Base64_Encoder::Base64_Encoder(bool line_breaks, size_t line_length, bool trailing_newline) :
       m_line_length(line_breaks ? line_length : 0),
       m_trailing_newline(trailing_newline && line_breaks),
-      m_in(48),
-      m_out(64) {}
+      m_in(Base64_Encoder_Input_Size),
+      m_out(base64_encode_max_output(Base64_Encoder_Input_Size)) {}
 
 /*
 * Encode and send a block
@@ -102,7 +114,8 @@ void Base64_Encoder::end_msg() {
 /*
 * Base64_Decoder Constructor
 */
-Base64_Decoder::Base64_Decoder(Decoder_Checking c) : m_checking(c), m_in(64), m_out(48) {}
+Base64_Decoder::Base64_Decoder(Decoder_Checking c) :
+      m_checking(c), m_in(Base64_Decoder_Input_Size), m_out(base64_decode_max_output(Base64_Decoder_Input_Size)) {}
 
 /*
 * Convert some data from Base64
