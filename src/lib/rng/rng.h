@@ -105,8 +105,8 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       * Provide seed material to the RNG.
       *
       * The caller asserts that the input is full entropy seed material. For a
-      * stateful RNG such as HMAC_DRBG, an input of at least security_level()
-      * bits marks the RNG as seeded.
+      * stateful RNG such as HMAC_DRBG, an input of at least
+      * Stateful_RNG::required_seed_bits() bits marks the RNG as seeded.
       *
       * To mix in data of unknown quality (nonces, timestamps, values from a
       * peer's protocol message) without affecting the seeded state, instead

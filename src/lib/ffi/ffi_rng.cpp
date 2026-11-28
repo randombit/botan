@@ -19,6 +19,11 @@
    #include <botan/hmac_drbg.h>
 #endif
 
+#if defined(BOTAN_HAS_CTR_DRBG)
+   #include <botan/ctr_drbg.h>
+   #include <botan/internal/algorithm_spec.h>
+#endif
+
 #if defined(BOTAN_HAS_PROCESSOR_RNG)
    #include <botan/processor_rng.h>
 #endif
@@ -213,6 +218,15 @@ int botan_rng_init_drbg(botan_rng_t* rng_out, const char* drbg_name, const uint8
       if(name.starts_with("HMAC_DRBG(") && name.ends_with(')') && name.size() > 12) {
          const std::string hash = name.substr(10, name.size() - 11);
          drbg = std::make_unique<Botan::HMAC_DRBG>(hash);
+      }
+#endif
+
+#if defined(BOTAN_HAS_CTR_DRBG)
+      if(!drbg && name.starts_with("CTR_DRBG(")) {
+         const Botan::AlgorithmSpec spec(name);
+         if(auto m = spec.match("CTR_DRBG({cipher})")) {
+            drbg = std::make_unique<Botan::CTR_DRBG>(m->str("cipher"));
+         }
       }
 #endif
 

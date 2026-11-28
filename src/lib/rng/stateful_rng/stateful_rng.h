@@ -65,6 +65,14 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       */
       Stateful_RNG();
 
+      /**
+      * Create a Stateful_RNG which cannot reseed itself
+      *
+      * @param reseed_interval specifies a limit of how many times the RNG
+      * may be called before it must be reseeded, or zero for no limit
+      */
+      explicit Stateful_RNG(size_t reseed_interval);
+
       ~Stateful_RNG() override;
 
       Stateful_RNG(const Stateful_RNG& other) = delete;
@@ -76,7 +84,7 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       * Reset the RNG then consume this input as seed material
       *
       * The RNG is marked as seeded only if the input is at least
-      * security_level() bits long.
+      * required_seed_bits() bits long.
       */
       void initialize_with(std::span<const uint8_t> input);
 
@@ -84,7 +92,7 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       * Reset the RNG then consume this input as seed material
       *
       * The RNG is marked as seeded only if the input is at least
-      * security_level() bits long.
+      * required_seed_bits() bits long.
       * @param input the seed material
       * @param length the number of bytes in input
       */
@@ -110,12 +118,14 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       /**
       * Reseed this RNG from another RNG
       * @param rng the RNG to draw seed material from
-      * @param poll_bits the number of bits to collect
+      * @param poll_bits the number of bits to collect; at least
+      * required_seed_bits() are always collected
       */
       void reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits = RandomNumberGenerator::DefaultPollBits) final;
 
       /**
-      * Poll provided sources for up to poll_bits bits of entropy.
+      * Poll provided sources for up to poll_bits bits of entropy, or
+      * required_seed_bits() if that is larger.
       * Returns estimate of the number of bits collected.
       */
       size_t reseed_from_sources(Entropy_Sources& srcs,
@@ -126,6 +136,13 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       * @return intended security level of this DRBG
       */
       virtual size_t security_level() const = 0;
+
+      /**
+      * Return how many bits of seed material are required to seed this DRBG
+      *
+      * By default this is the security level
+      */
+      virtual size_t required_seed_bits() const { return security_level(); }
 
       /**
       * Return the largest number of bytes this DRBG will produce per request
@@ -141,8 +158,8 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       virtual size_t max_number_of_bytes_per_request() const = 0;
 
       /**
-      * Return how many requests may be made before automatic reseeding
-      * @return the reseed interval, or zero if automatic reseeding is disabled
+      * Return how many requests may be made before a reseed is required
+      * @return the reseed interval, or zero if there is no limit
       */
       size_t reseed_interval() const { return m_reseed_interval; }
 

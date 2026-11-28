@@ -1,0 +1,21 @@
+<defines>
+CTR_DRBG -> 20261030
+</defines>
+
+<module_info>
+name -> "CTR DRBG"
+brief -> "As defined in NIST SP800-90A"
+</module_info>
+
+<requires>
+block
+stateful_rng
+</requires>
+
+<header:public>
+ctr_drbg.h
+</header:public>
+
+<header:internal>
+ctr_drbg_nodf.h
+</header:internal>

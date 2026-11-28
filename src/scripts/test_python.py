@@ -332,6 +332,26 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(out3.hex(),
                          '404b055a2d802320c5a288e0f46559c554425d70938326bf408efb361c7424bf')
 
+    def test_ctr_drbg(self):
+        seed = bytes(range(48))
+
+        drbg = botan.RandomNumberGenerator.drbg('CTR_DRBG(AES-256)', seed)
+        self.assertEqual(drbg.get(32).hex(),
+                         '7ad7f0612b3eef3e51f8b3517deca58df1dbb97783e8b2930334c5c76cd71612')
+
+        drbg2 = botan.RandomNumberGenerator.drbg('CTR_DRBG(AES-256)', seed)
+        self.assertEqual(drbg2.generate_with_input(32, b'additional input').hex(),
+                         'dfa7ab641a400267f7962543f10c0acace6624635243ce499792a685a883c2af')
+
+        drbg3 = botan.RandomNumberGenerator.drbg('CTR_DRBG(AES-256)', seed)
+        drbg3.add_entropy(bytes(32))
+        self.assertEqual(drbg3.get(32).hex(),
+                         '8fdad60ee229c4384885255be07bc1b5ecd05beb74e8475d60d4e726be144481')
+
+        # The seed must include a nonce of half the security level
+        with self.assertRaises(botan.BotanException):
+            botan.RandomNumberGenerator.drbg('CTR_DRBG(AES-256)', bytes(47))
+
     def test_custom_rng(self):
         class CustomRngHandler:
             def __init__(self, hardcoded=False):

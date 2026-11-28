@@ -7,6 +7,7 @@
 #include "tests.h"
 
 #include <botan/rng.h>
+#include <algorithm>
 
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
    #include <botan/entropy_src.h>
@@ -144,6 +145,37 @@ class Entropy_Source_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("rng", "entropy", Entropy_Source_Tests);
+
+   #if defined(BOTAN_HAS_SYSTEM_RNG)
+
+std::vector<Test::Result> entropy_source_goal() {
+   return {
+      CHECK("RNG based entropy source sizes its poll to the goal",
+            [](Test::Result& result) {
+               Botan::Entropy_Sources srcs;
+               srcs.add_source(Botan::Entropy_Source::create("system_rng"));
+
+               for(const size_t goal_bits : {64, 256, 384, 1024}) {
+                  size_t bytes = 0;
+                  Botan::Entropy_Accumulator acc(goal_bits, [&](std::span<const uint8_t> in) { bytes += in.size(); });
+
+                  const size_t bits = srcs._gather(acc);
+                  const std::string label = "goal of " + std::to_string(goal_bits) + " bits";
+
+                  result.test_is_true(label + " reached", acc.goal_reached());
+                  result.test_sz_eq(label + " collected", bits, acc.bits_collected());
+                  // A single poll never provides less than the default
+                  const size_t expected = std::max(goal_bits, Botan::RandomNumberGenerator::DefaultPollBits);
+                  result.test_sz_eq(label + " credited", bits, expected);
+                  result.test_sz_eq(label + " bytes", bytes, expected / 8);
+               }
+            }),
+   };
+}
+
+BOTAN_REGISTER_TEST_FN("rng", "entropy_source_goal", entropy_source_goal);
+
+   #endif
 
 }  // namespace
 

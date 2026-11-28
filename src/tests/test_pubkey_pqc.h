@@ -27,7 +27,8 @@ namespace Botan_Tests {
  *
  * All these tests use a DRBG based on AES-256/CTR to expand seed values defined
  * in the KAT vector as entropy input for key generation and encapsulation.
- * Note that these tests won't run when the library is configured without AES.
+ * Note that these tests won't run when the library is configured without AES
+ * or CTR_DRBG.
  *
  * See also: https://csrc.nist.gov/projects/post-quantum-cryptography/post-quantum-cryptography-standardization/example-files
  */
@@ -76,7 +77,7 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
 
    private:
       bool skip_this_test([[maybe_unused]] const std::string& params, const VarMap& /*vars*/) final {
-   #if !defined(BOTAN_HAS_AES)
+   #if !defined(BOTAN_HAS_CTR_DRBG) || !defined(BOTAN_HAS_AES)
          return true;
    #else
          return !is_available(params);
@@ -84,10 +85,10 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
       }
 
       std::unique_ptr<Botan::RandomNumberGenerator> create_drbg([[maybe_unused]] std::span<const uint8_t> seed) {
-   #if defined(BOTAN_HAS_AES)
-         return std::make_unique<CTR_DRBG_AES256>(seed);
+   #if defined(BOTAN_HAS_CTR_DRBG) && defined(BOTAN_HAS_AES)
+         return make_pqc_kat_drbg(seed);
    #else
-         throw Botan_Tests::Test_Error("PQC KAT tests require a build with AES");
+         throw Botan_Tests::Test_Error("PQC KAT tests require a build with CTR_DRBG and AES");
    #endif
       }
 
