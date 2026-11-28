@@ -20,6 +20,7 @@ API Reference
    names
    x509
    pkcs12
+   cms
    tls
    credentials_manager
    bigint

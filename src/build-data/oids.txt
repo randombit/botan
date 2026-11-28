@@ -249,6 +249,12 @@
 2.16.840.1.101.3.4.1.25 = KeyWrap.AES-192
 2.16.840.1.101.3.4.1.45 = KeyWrap.AES-256
 
+[kdf]
+# HKDF (RFC 8619)
+1.2.840.113549.1.9.16.3.28 = HKDF(SHA-256)
+1.2.840.113549.1.9.16.3.29 = HKDF(SHA-384)
+1.2.840.113549.1.9.16.3.30 = HKDF(SHA-512)
+
 [compression]
 1.2.840.113549.1.9.16.3.8 = Compression.Zlib
 
@@ -367,15 +373,24 @@
 1.2.840.113549.1.12.10.1.5 = PKCS12.SecretBag
 1.2.840.113549.1.12.10.1.6 = PKCS12.SafeContentsBag
 
-# PKCS#7 content types (used by PKCS#12)
+# PKCS#7 content types (used by PKCS#12 and CMS)
 1.2.840.113549.1.7.1 = PKCS7.Data
+1.2.840.113549.1.7.2 = PKCS7.SignedData
+1.2.840.113549.1.7.3 = PKCS7.EnvelopedData
 1.2.840.113549.1.7.6 = PKCS7.EncryptedData
+
+[cms]
+# CMS content types and recipient info types (RFC 5083, RFC 9629)
+1.2.840.113549.1.9.16.1.23 = CMS.AuthEnvelopedData
+1.2.840.113549.1.9.16.13.3 = CMS.KEMRecipientInfo
 
 [pkcs9]
 1.2.840.113549.1.9.1 = PKCS9.EmailAddress
 1.2.840.113549.1.9.2 = PKCS9.UnstructuredName
 1.2.840.113549.1.9.3 = PKCS9.ContentType
 1.2.840.113549.1.9.4 = PKCS9.MessageDigest
+1.2.840.113549.1.9.5 = PKCS9.SigningTime
+1.2.840.113549.1.9.52 = PKCS9.CMSAlgorithmProtection
 1.2.840.113549.1.9.7 = PKCS9.ChallengePassword
 1.2.840.113549.1.9.14 = PKCS9.ExtensionRequest
 
