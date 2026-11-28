@@ -17,6 +17,18 @@
    #include <botan/rfc4880.h>
 #endif
 
+#if defined(BOTAN_HAS_PGP_S2K)
+   #include <botan/pgp_s2k.h>
+#endif
+
+#if defined(BOTAN_HAS_THREAD_UTILS)
+   #include <botan/internal/thread_pool.h>
+#endif
+
+#if defined(BOTAN_HAS_PGP_S2K) || defined(BOTAN_HAS_THREAD_UTILS)
+   #include <stop_token>
+#endif
+
 namespace Botan_Tests {
 
 namespace {
@@ -138,6 +150,84 @@ class Pwdhash_Tests : public Test {
 };
 
 BOTAN_REGISTER_TEST("pbkdf", "pwdhash", Pwdhash_Tests);
+
+   #if defined(BOTAN_HAS_THREAD_UTILS)
+class Pwdhash_StopToken_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+
+         const std::vector<std::string> all_pwdhash = {
+            "Scrypt", "PBKDF2(SHA-256)", "Argon2d", "Argon2i", "Argon2id", "Bcrypt-PBKDF", "PKCS12-KDF(SHA-256,2)"};
+         // Private thread pool to guarantee thread availability for cancellation.
+         // We need just 1 thread as the cancellation tests are executed serially.
+         Botan::Thread_Pool thread_pool(1);
+
+         for(const std::string& algo_spec : all_pwdhash) {
+            Test::Result result("Cooperative cancellation " + algo_spec);
+
+            auto fam = Botan::PasswordHashFamily::create(algo_spec);
+            if(!fam) {
+               result.test_note(algo_spec + " family unavailable");
+               results.push_back(result);
+               continue;
+            }
+
+            result.start_timer();
+
+            // Test will be cancelled after 500ms below. If cancellation fails, test runs for 10s.
+            const auto run_time = std::chrono::milliseconds(10000);
+            const auto tune_time = std::chrono::milliseconds(100);
+            const size_t max_mem = 32;
+            auto pwdhash = fam->tune_params(
+               32, static_cast<uint64_t>(run_time.count()), max_mem, static_cast<uint64_t>(tune_time.count()));
+
+            const std::string password = "cancel-me";
+            const std::vector<uint8_t> salt(16, 0xAA);
+            std::vector<uint8_t> out(32);
+
+            std::stop_source src;
+
+            // Helper thread that will request cancellation
+            auto future = thread_pool.run([&src]() {
+               const auto stop_time = std::chrono::milliseconds(500);
+               std::this_thread::sleep_for(stop_time);
+               src.request_stop();  // fire the cancellation
+            });
+
+            // Run the derivation on the main thread and evaluate the result
+            try {
+               const uint64_t start = timestamp();
+               pwdhash->derive_key(
+                  out.data(), out.size(), password.c_str(), password.size(), salt.data(), salt.size(), src.get_token());
+               // If we reach this line, the stop token was ignored
+               const uint64_t ms_taken = (timestamp() - start) / 1000000;
+               if(ms_taken < static_cast<uint64_t>(run_time.count()) / 2) {
+                  result.test_note("Derivation completed in " + std::to_string(ms_taken) +
+                                   "ms. Ignoring mistuned password hash.");
+               } else {
+                  result.test_failure("Derivation completed without observing stop token");
+               }
+            } catch(const Botan::Operation_Canceled& e) {
+               // Expected – password hash saw the stop token and threw
+               result.test_success("Cancellation raised Botan::Operation_Canceled: " + std::string(e.what()));
+            } catch(const std::exception& e) {
+               result.test_failure("Unexpected std::exception", e.what());
+            } catch(...) {
+               result.test_failure("Non-standard exception thrown on cancellation");
+            }
+
+            future.get();  // ensure the canceller thread finished
+
+            result.end_timer();
+            results.push_back(result);
+         }
+         return results;
+      }
+};
+
+BOTAN_REGISTER_TEST("pbkdf", "pwdhash_stop_token", Pwdhash_StopToken_Test);
+   #endif
 
 #endif
 
@@ -262,6 +352,74 @@ BOTAN_REGISTER_SERIALIZED_TEST("pbkdf", "argon2", Argon2_KAT_Tests);
 #endif
 
 #if defined(BOTAN_HAS_PGP_S2K)
+
+class Canceling_Hash final : public Botan::HashFunction {
+   public:
+      Canceling_Hash(std::unique_ptr<Botan::HashFunction> hash, std::stop_source stop_source) :
+            m_hash(std::move(hash)), m_stop_source(std::move(stop_source)) {}
+
+      size_t output_length() const override { return m_hash->output_length(); }
+
+      std::string name() const override { return m_hash->name(); }
+
+      void clear() override { m_hash->clear(); }
+
+      std::unique_ptr<Botan::HashFunction> new_object() const override {
+         return std::make_unique<Canceling_Hash>(m_hash->new_object(), m_stop_source);
+      }
+
+      std::unique_ptr<Botan::HashFunction> copy_state() const override {
+         return std::make_unique<Canceling_Hash>(m_hash->copy_state(), m_stop_source);
+      }
+
+   private:
+      void add_data(std::span<const uint8_t> input) override {
+         m_hash->update(input);
+         // Ignore the empty padding update so cancellation happens after hashing has begun.
+         if(!input.empty()) {
+            m_stop_source.request_stop();
+         }
+      }
+
+      void final_result(std::span<uint8_t> output) override { m_hash->final(output); }
+
+      std::unique_ptr<Botan::HashFunction> m_hash;
+      std::stop_source m_stop_source;
+};
+
+class PGP_S2K_Cancellation_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("OpenPGP S2K reuse after cancellation");
+         auto hash = Botan::HashFunction::create("SHA-256");
+         if(!hash) {
+            result.note_missing("SHA-256");
+            return {result};
+         }
+
+         const size_t iterations = 65536;
+         const std::string password = "password";
+         const std::vector<uint8_t> salt(8, 0xAA);
+         std::vector<uint8_t> derived(32);
+         std::vector<uint8_t> expected(derived.size());
+
+         std::stop_source stop_source;
+         const Botan::RFC4880_S2K fresh(hash->new_object(), iterations);
+         Botan::RFC4880_S2K reused(std::make_unique<Canceling_Hash>(std::move(hash), stop_source), iterations);
+
+         fresh.hash(expected, password, salt);
+         result.test_throws<Botan::Operation_Canceled>("Cancellation requested while hashing", [&] {
+            reused.hash(derived, password, salt, stop_source.get_token());
+         });
+
+         reused.hash(derived, password, salt);
+         result.test_bin_eq("Derived key after cancellation matches fresh instance", derived, expected);
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pbkdf", "pgp_s2k_cancellation", PGP_S2K_Cancellation_Test);
 
 class PGP_S2K_Iter_Test final : public Test {
    public:
