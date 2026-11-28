@@ -11,6 +11,7 @@
 #include <botan/internal/target_info.h>
 #include <cstdlib>
 #include <new>
+#include <span>
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
    #include <botan/internal/locking_allocator.h>
@@ -24,14 +25,14 @@ BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size) {
    }
 
    // Some calloc implementations do not check for overflow (?!?)
-   if(!checked_mul(elems, elem_size).has_value()) {
+   const auto bytes = checked_mul(elems, elem_size);
+   if(!bytes.has_value()) {
       throw std::bad_alloc();
    }
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
-   // NOLINTNEXTLINE(*-const-correctness) bug in clang-tidy
-   if(void* p = mlock_allocator::instance().allocate(elems, elem_size)) {
-      return p;
+   if(const auto buf = mlock_allocator::instance().allocate(*bytes); !buf.empty()) {
+      return buf.data();
    }
 #endif
 
@@ -55,8 +56,15 @@ void deallocate_memory(void* p, size_t elems, size_t elem_size) {
    secure_scrub_memory(p, elems * elem_size);
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
-   if(mlock_allocator::instance().deallocate(p, elems, elem_size)) {
-      return;
+   /*
+   allocate_memory throws on overflow before reaching the pool, so if the
+   size overflows here the pointer cannot have come from the pool.
+   */
+   if(const auto bytes = checked_mul(elems, elem_size)) {
+      const std::span<uint8_t> buf(static_cast<uint8_t*>(p), *bytes);
+      if(mlock_allocator::instance().deallocate(buf)) {
+         return;
+      }
    }
 #endif
 

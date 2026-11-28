@@ -308,7 +308,7 @@ uint64_t OS::get_high_resolution_clock() {
    };
 
    for(const clockid_t clock : clock_types) {
-      struct timespec ts {};
+      struct timespec ts{};
 
       if(::clock_gettime(clock, &ts) == 0) {
          return (static_cast<uint64_t>(ts.tv_sec) * 1000000000) + static_cast<uint64_t>(ts.tv_nsec);
@@ -327,7 +327,7 @@ uint64_t OS::get_high_resolution_clock() {
 
 uint64_t OS::get_system_timestamp_ns() {
 #if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
-   struct timespec ts {};
+   struct timespec ts{};
 
    if(::clock_gettime(CLOCK_REALTIME, &ts) == 0) {
       return (static_cast<uint64_t>(ts.tv_sec) * 1000000000) + static_cast<uint64_t>(ts.tv_nsec);
@@ -347,12 +347,12 @@ std::optional<uint64_t> OS::get_thread_cpu_time_ns() {
    // Tick-based accounting is useless for timing a single call, so only
    // use this clock if it claims fine resolution
    static const bool usable = []() {
-      struct timespec res {};
+      struct timespec res{};
       return ::clock_getres(CLOCK_THREAD_CPUTIME_ID, &res) == 0 && res.tv_sec == 0 && res.tv_nsec <= 10000;
    }();
 
    if(usable) {
-      struct timespec ts {};
+      struct timespec ts{};
 
       if(::clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) == 0) {
          return (static_cast<uint64_t>(ts.tv_sec) * 1000000000) + static_cast<uint64_t>(ts.tv_nsec);
@@ -427,7 +427,7 @@ size_t OS::get_memory_locking_limit() {
       std::min<size_t>(read_env_variable_sz("BOTAN_MLOCK_POOL_SIZE", max_locked_kb), max_locked_kb);
 
    if(mlock_requested > 0) {
-      struct ::rlimit limits {};
+      struct ::rlimit limits{};
 
       ::getrlimit(RLIMIT_MEMLOCK, &limits);
 
@@ -570,10 +570,10 @@ int mmap_prot() {
 
 #endif
 
-std::vector<void*> OS::allocate_locked_pages(size_t count) {
-   std::vector<void*> result;
+std::vector<std::span<uint8_t>> OS::allocate_locked_pages(size_t count) {
+   std::vector<std::span<uint8_t>> result;
 
-#if(defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)) || \
+#if (defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)) || \
    defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
 
    result.reserve(count);
@@ -637,7 +637,8 @@ std::vector<void*> OS::allocate_locked_pages(size_t count) {
       // Make guard page following the data page
       page_prohibit_access(static_cast<uint8_t*>(ptr) + 2 * page_size);
 
-      result.push_back(static_cast<uint8_t*>(ptr) + page_size);
+      // Return only the data page, which sits between the two guard pages
+      result.push_back({static_cast<uint8_t*>(ptr) + page_size, page_size});
    }
 #else
    BOTAN_UNUSED(count);
@@ -722,22 +723,23 @@ bool OS::Fork_Detector::fork_detected() const {
    return OS::get_process_id() != m_process_id || OS::get_fork_generation() != m_fork_generation;
 }
 
-void OS::free_locked_pages(const std::vector<void*>& pages) {
+void OS::free_locked_pages(const std::vector<std::span<uint8_t>>& pages) {
    const size_t page_size = OS::system_page_size();
 
-   for(void* ptr : pages) {
+   for(const auto& page : pages) {
+      uint8_t* ptr = page.data();
       secure_scrub_memory(ptr, page_size);
 
       // ptr points to the data page, guard pages are before and after
-      page_allow_access(static_cast<uint8_t*>(ptr) - page_size);
-      page_allow_access(static_cast<uint8_t*>(ptr) + page_size);
+      page_allow_access(ptr - page_size);
+      page_allow_access(ptr + page_size);
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
       ::munlock(ptr, page_size);
-      ::munmap(static_cast<uint8_t*>(ptr) - page_size, 3 * page_size);
+      ::munmap(ptr - page_size, 3 * page_size);
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
       ::VirtualUnlock(ptr, page_size);
-      ::VirtualFree(static_cast<uint8_t*>(ptr) - page_size, 0, MEM_RELEASE);
+      ::VirtualFree(ptr - page_size, 0, MEM_RELEASE);
 #endif
    }
 }
@@ -822,7 +824,7 @@ int OS::run_cpu_instruction_probe(const std::function<int()>& probe_fn) {
    const std::lock_guard<std::mutex> lock(g_sigill_probe_mutex);
    #endif
 
-   struct sigaction sigaction {};
+   struct sigaction sigaction{};
 
    sigaction.sa_handler = botan_sigill_handler;
    sigemptyset(&sigaction.sa_mask);

@@ -13,6 +13,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -148,7 +149,7 @@ size_t get_memory_locking_limit();
 * Return the size of a memory page, if that can be derived on the
 * current system. Otherwise returns some default value (eg 4096)
 */
-size_t system_page_size();
+size_t BOTAN_TEST_API system_page_size();
 
 /**
 * Read the value of an environment variable, setting it to value_out if it
@@ -182,13 +183,13 @@ size_t read_env_variable_sz(std::string_view var_name, size_t def_value = 0);
 *
 * @param count requested number of locked pages
 */
-std::vector<void*> allocate_locked_pages(size_t count);
+std::vector<std::span<uint8_t>> allocate_locked_pages(size_t count);
 
 /**
 * Free memory allocated by allocate_locked_pages
 * @param pages a list of pages returned by allocate_locked_pages
 */
-void free_locked_pages(const std::vector<void*>& pages);
+void free_locked_pages(const std::vector<std::span<uint8_t>>& pages);
 
 /**
 * Set the MMU to prohibit access to this page
