@@ -11,6 +11,7 @@
 
 #include <botan/internal/sp_hash.h>
 
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hash_engine.h>
 #include <botan/internal/shake.h>
@@ -36,9 +37,11 @@ class Sphincs_Hash_Functions_Shake : public Sphincs_Hash_Functions {
 
       size_t address_encoding_len() const override { return 32; }
 
-      void encode_address(std::span<uint8_t> out, const Sphincs_Address& address) const override {
-         const auto adrs = address.to_bytes();
-         copy_mem(out.data(), adrs.data(), adrs.size());
+      void encode_addresses(std::span<uint8_t> out, std::span<const Sphincs_Address> addresses) const override {
+         BufferStuffer stuffer(out);
+         for(const auto& address : addresses) {
+            stuffer.append(address.to_bytes());
+         }
       }
 
       std::vector<uint8_t> H_msg_digest(StrongSpan<const SphincsMessageRandomness> r,

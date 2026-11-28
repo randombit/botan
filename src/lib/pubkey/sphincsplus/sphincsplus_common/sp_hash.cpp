@@ -44,10 +44,9 @@ void Sphincs_Hash_Functions::T_batch(std::span<std::span<uint8_t>> outputs,
    m_adrs_buf.resize(addresses.size() * adrs_len);
    m_adrs_spans.resize(addresses.size());
 
+   encode_addresses(m_adrs_buf, addresses);
    for(size_t i = 0; i != addresses.size(); ++i) {
-      const auto adrs = std::span(m_adrs_buf).subspan(i * adrs_len, adrs_len);
-      encode_address(adrs, addresses[i]);
-      m_adrs_spans[i] = adrs;
+      m_adrs_spans[i] = std::span(m_adrs_buf).subspan(i * adrs_len, adrs_len);
    }
 
    engine.batch_hash(outputs, m_adrs_spans, inputs);

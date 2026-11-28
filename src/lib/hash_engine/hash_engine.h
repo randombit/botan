@@ -7,6 +7,7 @@
 #ifndef BOTAN_HASH_ENGINE_H_
 #define BOTAN_HASH_ENGINE_H_
 
+#include <botan/mem_ops.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <memory>
@@ -133,6 +134,28 @@ class BOTAN_TEST_API Hash_Engine {
       void check_batch_args(std::span<std::span<uint8_t>> outputs,
                             std::span<std::span<const uint8_t>> inputs1,
                             std::span<std::span<const uint8_t>> inputs2) const;
+
+      /**
+      * Copy n bytes between non-overlapping buffers
+      *
+      * Lengths up to 64 bytes, typical of batch hash inputs and outputs, are
+      * copied inline, since a call to memmove costs about as much as the copy
+      */
+      static void copy_short(uint8_t* out, const uint8_t* in, size_t n) {
+         // Two fixed size copies, which may overlap, cover any length in [W, 2W]
+         if(n >= 16 && n <= 32) {
+            copy_mem(out, in, 16);
+            copy_mem(out + n - 16, in + n - 16, 16);
+         } else if(n > 32 && n <= 64) {
+            copy_mem(out, in, 32);
+            copy_mem(out + n - 32, in + n - 32, 32);
+         } else if(n >= 8 && n < 16) {
+            copy_mem(out, in, 8);
+            copy_mem(out + n - 8, in + n - 8, 8);
+         } else {
+            copy_mem(out, in, n);
+         }
+      }
 
    private:
       secure_vector<uint8_t> m_common_prefix;

@@ -34,15 +34,13 @@ BOTAN_FN_ISA_SIMD_8X64 void keccak_mb_permute_x8(uint64_t* states) {
    }
 }
 
-BOTAN_FN_ISA_SIMD_8X64 void keccak_mb_absorb_x8(uint64_t* states,
-                                                const uint8_t* const* blocks,
-                                                size_t rate_words,
-                                                size_t nblocks) {
+BOTAN_FN_ISA_SIMD_8X64 void keccak_mb_absorb_x8(
+   uint64_t* states, const uint64_t* states_in, const uint8_t* const* blocks, size_t rate_words, size_t nblocks) {
    SIMD_8x64 A[25];
    SIMD_8x64 T[25];
 
    for(size_t w = 0; w != 25; ++w) {
-      A[w] = SIMD_8x64::load_le(states + 8 * w);
+      A[w] = SIMD_8x64::load_le(states_in + 8 * w);
    }
 
    // The whole strip is staged into word-major lane order with scalar

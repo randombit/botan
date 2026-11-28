@@ -60,9 +60,11 @@ class Hash_Engine_Tests final : public Test {
                                   Botan::RandomNumberGenerator& rng,
                                   Botan::Hash_Engine& engine,
                                   Botan::HashFunction& ref_hash) {
-         // Message sizes chosen to hit various padding edge cases
-         const std::vector<size_t> msg_sizes = {0,   1,   7,   24,  32,  55,  56,  63,  64,  65,  111, 112,
-                                                127, 128, 129, 135, 136, 137, 200, 255, 256, 257, 271, 272};
+         // Message sizes chosen to hit various padding edge cases, and long
+         // enough to span several absorb strips of the Keccak engine
+         const std::vector<size_t> msg_sizes = {0,   1,   7,   24,  32,   55,   56,   63,   64,  65,
+                                                111, 112, 127, 128, 129,  135,  136,  137,  200, 255,
+                                                256, 257, 271, 272, 1087, 1088, 1089, 1344, 2400};
 
          const size_t parallelism = engine.parallelism();
          const size_t output_length = engine.output_length();
@@ -102,7 +104,7 @@ class Hash_Engine_Tests final : public Test {
          const size_t output_length = engine.output_length();
          const size_t count = engine.parallelism() + 3;
 
-         const std::vector<size_t> part_sizes = {0, 1, 22, 32, 55, 64, 111, 137};
+         const std::vector<size_t> part_sizes = {0, 1, 22, 32, 55, 64, 111, 137, 1500};
 
          std::vector<std::vector<uint8_t>> in1_bufs(count);
          std::vector<std::vector<uint8_t>> in2_bufs(count);

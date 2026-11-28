@@ -28,8 +28,9 @@ std::unique_ptr<Hash_Engine> create_keccak_mb_engine(std::string_view hash_fn,
 * The states buffer holds the 25 Keccak words for each lane, in
 * word-major order (all lanes of word 0, then all lanes of word 1, ...).
 *
-* The absorb variants keep the state in registers while absorbing and
-* permuting nblocks rate blocks. blocks[b * lanes + l] points to the
+* The absorb variants load the states from states_in, which may equal
+* states, keep them in registers while absorbing and permuting nblocks
+* rate blocks, then store them to states. blocks[b * lanes + l] points to the
 * rate bytes of block b of lane l, which the kernel transposes into the
 * word-major lane order as it absorbs. At most KECCAK_MB_ABSORB_BLOCKS
 * blocks may be passed per call.
@@ -39,12 +40,14 @@ inline constexpr size_t KECCAK_MB_ABSORB_BLOCKS = 8;
 
 #if defined(BOTAN_HAS_HASH_ENGINE_KECCAK_AVX2)
 void keccak_mb_permute_x4(uint64_t* states);
-void keccak_mb_absorb_x4(uint64_t* states, const uint8_t* const* blocks, size_t rate_words, size_t nblocks);
+void keccak_mb_absorb_x4(
+   uint64_t* states, const uint64_t* states_in, const uint8_t* const* blocks, size_t rate_words, size_t nblocks);
 #endif
 
 #if defined(BOTAN_HAS_HASH_ENGINE_KECCAK_AVX512)
 void keccak_mb_permute_x8(uint64_t* states);
-void keccak_mb_absorb_x8(uint64_t* states, const uint8_t* const* blocks, size_t rate_words, size_t nblocks);
+void keccak_mb_absorb_x8(
+   uint64_t* states, const uint64_t* states_in, const uint8_t* const* blocks, size_t rate_words, size_t nblocks);
 #endif
 
 }  // namespace Botan
