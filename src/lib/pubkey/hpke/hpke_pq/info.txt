@@ -1,0 +1,19 @@
+<defines>
+HPKE_PQ -> 20261119
+</defines>
+
+<module_info>
+name -> "HPKE PQ KEMs"
+brief -> "ML-KEM and PQ/T hybrid KEMs for HPKE (draft-ietf-hpke-pq, experimental)"
+lifecycle -> "Experimental"
+</module_info>
+
+<requires>
+ml_kem
+sha3
+shake_xof
+</requires>
+
+<header:internal>
+hpke_pq.h
+</header:internal>

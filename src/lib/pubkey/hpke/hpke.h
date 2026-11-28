@@ -34,6 +34,13 @@ class Recipient_Context;
 *
 * These codepoints match the IANA "HPKE KEM Identifiers" registry
 * established by RFC 9180 Section 7.1.
+*
+* The post-quantum (ML-KEM) and post-quantum/traditional hybrid KEMs are
+* those of draft-ietf-hpke-pq-05. They are implemented by the experimental
+* hpke_pq module, which is not part of a default build; without it these
+* codepoints are known but not available. That document is not yet final,
+* and the behavior of these KEMs may change in an incompatible way if it
+* does.
 */
 enum class KEM_Code : uint16_t /* NOLINT(*-enum-size) */ {
    DHKEM_P256 = 0x0010,    // DHKEM(P-256, HKDF-SHA256)
@@ -41,6 +48,14 @@ enum class KEM_Code : uint16_t /* NOLINT(*-enum-size) */ {
    DHKEM_P521 = 0x0012,    // DHKEM(P-521, HKDF-SHA512)
    DHKEM_X25519 = 0x0020,  // DHKEM(X25519, HKDF-SHA256)
    DHKEM_X448 = 0x0021,    // DHKEM(X448, HKDF-SHA512)
+
+   ML_KEM_512 = 0x0040,   // ML-KEM-512
+   ML_KEM_768 = 0x0041,   // ML-KEM-768
+   ML_KEM_1024 = 0x0042,  // ML-KEM-1024
+
+   MLKEM768_P256 = 0x0050,    // MLKEM768-P256
+   MLKEM1024_P384 = 0x0051,   // MLKEM1024-P384
+   MLKEM768_X25519 = 0x647A,  // MLKEM768-X25519, also known as X-Wing
 };
 
 /**
@@ -96,6 +111,12 @@ class BOTAN_PUBLIC_API(3, 14) KEM_Id final {
             case KEM_Code::DHKEM_P521:
             case KEM_Code::DHKEM_X25519:
             case KEM_Code::DHKEM_X448:
+            case KEM_Code::ML_KEM_512:
+            case KEM_Code::ML_KEM_768:
+            case KEM_Code::ML_KEM_1024:
+            case KEM_Code::MLKEM768_P256:
+            case KEM_Code::MLKEM1024_P384:
+            case KEM_Code::MLKEM768_X25519:
                return true;
          }
          return false;
@@ -110,8 +131,20 @@ class BOTAN_PUBLIC_API(3, 14) KEM_Id final {
                 m_code == KEM_Code::DHKEM_X25519 || m_code == KEM_Code::DHKEM_X448;
       }
 
+      /// True for the pure ML-KEM KEMs of draft-ietf-hpke-pq Section 3
+      constexpr bool is_ml_kem() const {
+         return m_code == KEM_Code::ML_KEM_512 || m_code == KEM_Code::ML_KEM_768 || m_code == KEM_Code::ML_KEM_1024;
+      }
+
+      /// True for the KEMs of draft-ietf-hpke-pq Section 4, which combine
+      /// ML-KEM with an elliptic curve Diffie-Hellman group
+      constexpr bool is_pq_hybrid() const {
+         return m_code == KEM_Code::MLKEM768_P256 || m_code == KEM_Code::MLKEM1024_P384 ||
+                m_code == KEM_Code::MLKEM768_X25519;
+      }
+
       /// Only the DH-based KEMs support the Auth and AuthPSK modes
-      /// See RFC 9180 Section 7.1
+      /// See RFC 9180 Section 7.1 and draft-ietf-hpke-pq Section 7.2
       constexpr bool supports_auth_modes() const { return is_dhkem(); }
 
       /// Return the constant Nsecret from RFC 9180 Section 7.1, throws for invalid code points
@@ -284,6 +317,12 @@ class BOTAN_PUBLIC_API(3, 14) Suite final {
 * throws Invalid_Argument. Holding a Public_Key therefore does not by itself
 * establish that an untrusted peer's key is acceptable.
 *
+* For the KEMs of draft-ietf-hpke-pq, a key deserialized from the wire has
+* passed the ML-KEM encapsulation key check (FIPS 203 Section 7.2), and
+* for a hybrid KEM its elliptic curve point was checked in the same way as
+* for the corresponding DHKEM, including that the check for low order
+* X25519 points is deferred.
+*
 * It has no inheritance relationship with Botan::Public_Key or with
 * HPKE::Private_Key.
 */
@@ -297,6 +336,10 @@ class BOTAN_PUBLIC_API(3, 14) Public_Key final {
       * Throws Decoding_Error if the length or encoding is wrong, or if a
       * NIST curve point is not on the curve. Low order X25519/X448 points
       * are not detected here; see the class description.
+      *
+      * For ML-KEM the wire format is the encapsulation key, and for the
+      * hybrid KEMs it is the ML-KEM encapsulation key followed by the
+      * elliptic curve public key.
       */
       static Public_Key deserialize(KEM_Id kem, std::span<const uint8_t> bytes);
 
@@ -307,6 +350,11 @@ class BOTAN_PUBLIC_API(3, 14) Public_Key final {
       * being how keys with the id-ecPublicKey OID (eg from an X.509 certificate)
       * are loaded; an ECDSA key is converted, so underlying() always returns an
       * ECDH key. Keys of other EC algorithms (SM2, ECGDSA, ...) are not accepted.
+      *
+      * For the ML-KEM KEMs, an ML-KEM key of the same parameter set is
+      * accepted. There is no standalone key type for the hybrid KEMs of
+      * draft-ietf-hpke-pq; their keys are created using deserialize (or,
+      * for a private key, generate or derive) instead.
       *
       * Throws Invalid_Argument unless the algorithm (and, for the NIST curves,
       * the group) matches the KEM.
@@ -322,7 +370,8 @@ class BOTAN_PUBLIC_API(3, 14) Public_Key final {
       * Access the wrapped key, eg for encoding as a X.509 SubjectPublicKeyInfo
       *
       * For the NIST curves this is an ECDH key, which encodes with the
-      * id-ecDH algorithm identifier.
+      * id-ecDH algorithm identifier. For the hybrid KEMs of draft-ietf-hpke-pq
+      * it is a key of a type internal to HPKE, which has no X.509 encoding.
       */
       const Botan::Public_Key& underlying() const;
 
@@ -362,6 +411,9 @@ class BOTAN_PUBLIC_API(3, 14) Private_Key final {
       * which must be full-entropy secret data of at least Nsk bytes; as
       * an exception DHKEM(P-521) accepts 64 bytes, since MLS (RFC 9420 Section 7.4)
       * derives P-521 key pairs from 64-byte node secrets.
+      *
+      * The KEMs of draft-ietf-hpke-pq require at least 32 bytes. For ML-KEM
+      * this is less than Nsk (64 bytes), which remains the recommended length.
       */
       static Private_Key derive(KEM_Id kem, std::span<const uint8_t> ikm);
 
@@ -370,6 +422,9 @@ class BOTAN_PUBLIC_API(3, 14) Private_Key final {
       *
       * Accepts Nsk raw bytes. The scalar is range-checked for the NIST
       * curves, and clamped (RFC 7748 Section 5) for X25519 and X448.
+      *
+      * For the KEMs of draft-ietf-hpke-pq the private key is a seed, of
+      * 64 bytes for ML-KEM and 32 bytes for the hybrid KEMs.
       */
       static Private_Key deserialize(KEM_Id kem, std::span<const uint8_t> bytes);
 
@@ -380,6 +435,9 @@ class BOTAN_PUBLIC_API(3, 14) Private_Key final {
       * and converted to ECDH, while other EC algorithms are rejected. Throws
       * Invalid_Argument unless the key's algorithm (and, for the NIST curves,
       * its group) matches the KEM.
+      *
+      * An ML-KEM private key which was loaded from its expanded encoding,
+      * and so does not include the seed, is accepted but cannot be serialized.
       */
       static Private_Key from_key(KEM_Id kem, std::unique_ptr<Botan::Private_Key> key);
 
@@ -393,6 +451,9 @@ class BOTAN_PUBLIC_API(3, 14) Private_Key final {
       *
       * For X25519 and X448 the output is clamped, as RFC 9180 Section 7.1.2
       * requires.
+      *
+      * Throws Invalid_State for an ML-KEM key which does not include its
+      * seed; see from_key.
       */
       secure_vector<uint8_t> serialize() const;
 
@@ -400,7 +461,8 @@ class BOTAN_PUBLIC_API(3, 14) Private_Key final {
       * Access the wrapped key, eg for encoding as PKCS #8
       *
       * For the NIST curves this is an ECDH key, which encodes with the
-      * id-ecDH algorithm identifier.
+      * id-ecDH algorithm identifier. For the hybrid KEMs of draft-ietf-hpke-pq
+      * it is a key of a type internal to HPKE, which has no PKCS #8 encoding.
       */
       const Botan::Private_Key& underlying() const;
 
@@ -543,6 +605,10 @@ class BOTAN_PUBLIC_API(3, 14) Sender_Context final {
 * throw Decoding_Error if the encapsulated key is malformed (wrong length
 * or encoding, or not a point on the curve), or Invalid_Argument if it or
 * the sender identity key is a low order X25519/X448 point.
+*
+* An ML-KEM ciphertext which is of the correct length but otherwise invalid
+* is not detected here: ML-KEM decapsulation then results in a pseudorandom
+* shared secret, so the context is created, and open() fails.
 */
 class BOTAN_PUBLIC_API(3, 14) Recipient_Context final {
    public:

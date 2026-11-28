@@ -36,6 +36,10 @@
    #include <botan/ecdsa.h>
 #endif
 
+#if defined(BOTAN_HAS_HPKE_PQ)
+   #include <botan/internal/hpke_pq.h>
+#endif
+
 namespace Botan::HPKE {
 
 namespace {
@@ -582,6 +586,13 @@ std::unique_ptr<const KEM_Ops> KEM_Ops::create(KEM_Id kem) {
       default:
          break;
    }
+
+#if defined(BOTAN_HAS_HPKE_PQ)
+   // See draft-ietf-hpke-pq-05 Sections 3 and 4
+   if(auto ops = create_pq_kem_ops(kem)) {
+      return ops;
+   }
+#endif
 
    throw Not_Implemented(fmt("HPKE KEM {} is not available in this build", kem_name(kem)));
 }
